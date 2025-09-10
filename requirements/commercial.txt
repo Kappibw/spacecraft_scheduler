@@ -1,0 +1,8 @@
+# Commercial solver dependencies (optional)
+# Requires valid licenses for these solvers
+
+# Gurobi (commercial)
+gurobipy>=10.0.0
+
+# CPLEX (commercial)
+cplex>=22.1.0
