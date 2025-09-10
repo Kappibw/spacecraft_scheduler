@@ -4,7 +4,8 @@ MILP-based scheduling algorithm for robot using the new models.
 
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
-from ortools.linear_solver import pywraplp
+import gurobipy as gp
+from gurobipy import GRB
 
 from ..base import BaseScheduler, ScheduleResult, ScheduleStatus, ScheduledTask
 from ...common.tasks.task import Task, TaskConstraintType
@@ -19,7 +20,7 @@ class MILPScheduler(BaseScheduler):
     
     def schedule(self, tasks: List[Task], resources: List[Resource]) -> ScheduleResult:
         """
-        Schedule tasks using OR-Tools MILP optimization.
+        Schedule tasks using Gurobi MILP optimization.
         
         Args:
             tasks: List of Task objects to schedule
@@ -45,16 +46,10 @@ class MILPScheduler(BaseScheduler):
             )
         
         try:
-            # Create OR-Tools solver
-            solver = pywraplp.Solver.CreateSolver('SCIP')
-            if not solver:
-                return self.create_schedule_result(
-                    status=ScheduleStatus.FAILED,
-                    message="Could not create OR-Tools solver"
-                )
-            
-            # Set time limit
-            solver.SetTimeLimit(self.time_limit * 1000)  # Convert to milliseconds
+            # Create Gurobi model
+            model = gp.Model("MILPScheduler")
+            model.setParam('TimeLimit', self.time_limit)
+            model.setParam('OutputFlag', 0)  # Suppress Gurobi output
             
             # Create time horizon based on task time windows
             time_horizon = self._calculate_time_horizon(tasks)
@@ -64,35 +59,32 @@ class MILPScheduler(BaseScheduler):
             x = {}
             for i, task in enumerate(tasks):
                 for t in range(time_horizon):
-                    x[i, t] = solver.IntVar(0, 1, f'x_{i}_{t}')
+                    x[i, t] = model.addVar(vtype=GRB.BINARY, name=f'x_{i}_{t}')
             
             # y[i] = start time of task i
             y = {}
             for i, task in enumerate(tasks):
-                y[i] = solver.IntVar(0, time_horizon - 1, f'y_{i}')
+                y[i] = model.addVar(vtype=GRB.INTEGER, lb=0, ub=time_horizon - 1, name=f'y_{i}')
             
             # z[i] = completion time of task i
             z = {}
             for i, task in enumerate(tasks):
-                z[i] = solver.IntVar(0, time_horizon, f'z_{i}')
+                z[i] = model.addVar(vtype=GRB.INTEGER, lb=0, ub=time_horizon, name=f'z_{i}')
             
             # Makespan variable
-            makespan = solver.IntVar(0, time_horizon, 'makespan')
+            makespan = model.addVar(vtype=GRB.INTEGER, lb=0, ub=time_horizon, name='makespan')
             
             # Constraints
             # Each task must start exactly once
             for i, task in enumerate(tasks):
-                constraint = solver.Constraint(1, 1)
-                for t in range(time_horizon):
-                    constraint.SetCoefficient(x[i, t], 1)
+                model.addConstr(gp.quicksum(x[i, t] for t in range(time_horizon)) == 1, 
+                               name=f'task_{i}_start_once')
             
             # Task duration constraints
             for i, task in enumerate(tasks):
                 # Use preferred duration for simplicity
                 duration = int(task.preferred_duration.total_seconds() / 60)  # Convert to minutes
-                constraint = solver.Constraint(duration, duration)
-                constraint.SetCoefficient(z[i], 1)
-                constraint.SetCoefficient(y[i], -1)
+                model.addConstr(z[i] - y[i] == duration, name=f'task_{i}_duration')
             
             # Time window constraints
             for i, task in enumerate(tasks):
@@ -102,13 +94,11 @@ class MILPScheduler(BaseScheduler):
                 
                 # Constraint: y[i] >= start_min
                 if start_min >= 0:
-                    constraint = solver.Constraint(start_min, solver.infinity())
-                    constraint.SetCoefficient(y[i], 1)
+                    model.addConstr(y[i] >= start_min, name=f'task_{i}_start_min')
                 
                 # Constraint: y[i] <= start_max
                 if start_max >= 0:
-                    constraint = solver.Constraint(-solver.infinity(), start_max)
-                    constraint.SetCoefficient(y[i], 1)
+                    model.addConstr(y[i] <= start_max, name=f'task_{i}_start_max')
             
             # Task dependency constraints
             for i, task in enumerate(tasks):
@@ -118,38 +108,32 @@ class MILPScheduler(BaseScheduler):
                         target_index = next((j for j, t in enumerate(tasks) if t.id == constraint_obj.target_task_id), None)
                         if target_index is not None:
                             # y[i] >= z[target_index]
-                            constraint = solver.Constraint(0, solver.infinity())
-                            constraint.SetCoefficient(y[i], 1)
-                            constraint.SetCoefficient(z[target_index], -1)
+                            model.addConstr(y[i] >= z[target_index], 
+                                          name=f'task_{i}_after_{target_index}')
             
             # Resource constraints (simplified - assume single robot)
             # Only one task can be running at a time
             for t in range(time_horizon):
-                constraint = solver.Constraint(0, 1)
-                for i, task in enumerate(tasks):
-                    duration = int(task.preferred_duration.total_seconds() / 60)
-                    for start_t in range(max(0, t - duration + 1), min(time_horizon, t + 1)):
-                        if (i, start_t) in x:
-                            constraint.SetCoefficient(x[i, start_t], 1)
+                model.addConstr(gp.quicksum(x[i, start_t] for i, task in enumerate(tasks)
+                                          for start_t in range(max(0, t - int(task.preferred_duration.total_seconds() / 60) + 1), 
+                                                              min(time_horizon, t + 1))
+                                          if (i, start_t) in x) <= 1, 
+                               name=f'resource_t_{t}')
             
             # Makespan constraint
             for i, task in enumerate(tasks):
-                constraint = solver.Constraint(0, solver.infinity())
-                constraint.SetCoefficient(z[i], 1)
-                constraint.SetCoefficient(makespan, -1)
+                model.addConstr(makespan >= z[i], name=f'makespan_{i}')
             
             # Objective: minimize makespan
-            objective = solver.Objective()
-            objective.SetCoefficient(makespan, 1)
-            objective.SetMinimization()
+            model.setObjective(makespan, GRB.MINIMIZE)
             
             # Solve
-            status = solver.Solve()
+            model.optimize()
             
             end_time = datetime.now()
             solve_time = (end_time - start_time).total_seconds()
             
-            if status == pywraplp.Solver.OPTIMAL or status == pywraplp.Solver.FEASIBLE:
+            if model.status == GRB.OPTIMAL or model.status == GRB.TIME_LIMIT:
                 # Extract solution
                 schedule = self._extract_solution(x, y, z, tasks, time_horizon)
                 
@@ -163,7 +147,7 @@ class MILPScheduler(BaseScheduler):
                 return self.create_schedule_result(
                     status=ScheduleStatus.FAILED,
                     solve_time=solve_time,
-                    message=f"Solver failed with status: {status}"
+                    message=f"Solver failed with status: {model.status}"
                 )
                 
         except Exception as e:
@@ -174,14 +158,14 @@ class MILPScheduler(BaseScheduler):
     
     def _extract_solution(self, x: Dict, y: Dict, z: Dict, 
                          tasks: List[Task], time_horizon: int) -> List[ScheduledTask]:
-        """Extract the solution from OR-Tools solver."""
+        """Extract the solution from Gurobi solver."""
         schedule = []
         
         for i, task in enumerate(tasks):
             # Find start time
             start_time = None
             for t in range(time_horizon):
-                if (i, t) in x and x[i, t].solution_value() > 0.5:
+                if (i, t) in x and x[i, t].x > 0.5:
                     start_time = t
                     break
             
@@ -195,7 +179,7 @@ class MILPScheduler(BaseScheduler):
                     end_time=end_datetime,
                     duration=task.preferred_duration,
                     priority=task.priority,
-                    metadata={"algorithm": "MILP"}
+                    metadata={"algorithm": "MILP-Gurobi"}
                 )
                 
                 # Add resource allocations

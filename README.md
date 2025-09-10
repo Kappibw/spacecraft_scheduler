@@ -49,7 +49,7 @@ python scheduler_example.py
 
 ### Algorithms
 - **`SimpleScheduler`**: Priority-based greedy scheduler
-- **`MILPScheduler`**: MILP-based scheduler using OR-Tools
+- **`MILPScheduler`**: MILP-based scheduler using Gurobi
 
 ### Testing Framework
 - **`TestRunner`**: Runs test cases against schedulers

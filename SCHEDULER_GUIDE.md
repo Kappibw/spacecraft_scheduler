@@ -19,7 +19,7 @@ The codebase has been consolidated into a clean, unified architecture:
 ### Algorithms (Consolidated)
 - **`BaseScheduler`**: Single base class for all scheduling algorithms
 - **`SchedulerSimpleScheduler`**: Simple priority-based scheduler
-- **`SchedulerMILPScheduler`**: MILP-based scheduler using OR-Tools
+- **`MILPScheduler`**: MILP-based scheduler using Gurobi
 
 ### Testing Framework
 - **`SchedulerTestCase`**: Represents a test case
@@ -314,7 +314,7 @@ Begin with a basic algorithm that handles simple cases:
 ### SchedulerMILPScheduler
 - **Type**: Mixed Integer Linear Programming
 - **Use case**: Complex scenarios, optimal solutions
-- **Features**: OR-Tools integration, constraint optimization
+- **Features**: Gurobi integration, constraint optimization
 
 ## 🎯 Best Practices
 
