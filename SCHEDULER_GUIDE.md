@@ -28,19 +28,13 @@ The codebase defines the objects necessary for simulating spacecraft task schedu
 
 ## Quick Start
 
-### 1. Run the Complete Demo
-```bash
-python spacecraft_scheduler/scheduler_demo.py
-```
-This shows the complete workflow: creating tasks, resources, running algorithms, and testing.
-
-### 2. Run Algorithm Comparison
+### 1. Run Algorithm Comparison
 ```bash
 python spacecraft_scheduler/scheduler.py
 ```
 This compares different scheduling algorithms on various test cases.
 
-### 3. Run Comprehensive Example
+### 2. Run Comprehensive Example
 ```bash
 python spacecraft_scheduler/scheduler_example.py
 ```

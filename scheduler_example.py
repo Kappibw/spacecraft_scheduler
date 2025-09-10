@@ -25,7 +25,7 @@ from src.testing.test_framework import (
 
 def create_warehouse_scenario():
     """Create a realistic warehouse scenario with the robot."""
-    print("🏭 Creating Warehouse Scenario")
+    print("Creating Warehouse Scenario")
     print("=" * 40)
     
     base_time = datetime.now()
@@ -185,7 +185,7 @@ def create_warehouse_scenario():
 
 def run_scheduling_example():
     """Run a complete scheduling example."""
-    print("🚀 Running Scheduling Example")
+    print("Running Scheduling Example")
     print("=" * 40)
     
     # Create scenario
@@ -220,11 +220,23 @@ def run_scheduling_example():
     if result.schedule:
         print("\nSchedule:")
         for i, scheduled_task in enumerate(result.schedule, 1):
-            print(f"  {i}. {scheduled_task.task_id}")
+            # Look up task name from task manager
+            task = task_manager.get_task(scheduled_task.task_id)
+            task_name = task.name if task else f"Task {scheduled_task.task_id[:8]}"
+            
+            print(f"  {i}. {task_name}")
             print(f"     Start: {scheduled_task.start_time.strftime('%H:%M:%S')}")
             print(f"     End: {scheduled_task.end_time.strftime('%H:%M:%S')}")
             print(f"     Duration: {scheduled_task.duration.total_seconds()/60:.1f} min")
-            print(f"     Resources: {scheduled_task.resource_allocations}")
+            
+            # Format resource allocations with names
+            resource_names = {}
+            for resource_id, amount in scheduled_task.resource_allocations.items():
+                resource = resource_manager.get_resource(resource_id)
+                resource_name = resource.name if resource else f"Resource {resource_id[:8]}"
+                resource_names[resource_name] = amount
+            
+            print(f"     Resources: {resource_names}")
             print()
     
     if result.unscheduled_tasks:
@@ -238,7 +250,7 @@ def run_scheduling_example():
 
 def run_testing_example():
     """Run a testing example."""
-    print("🧪 Running Testing Example")
+    print("Running Testing Example")
     print("=" * 40)
     
     # Create test runner
@@ -264,9 +276,9 @@ def run_testing_example():
     return results
 
 
-def demonstrate_algorithm_iteration():
-    """Demonstrate how to iterate on algorithms."""
-    print("🔄 Algorithm Iteration Example")
+def demonstrate_multiple_scheduler_testing():
+    """Demonstrate how to test multiple schedulers."""
+    print("Multiple Scheduler Testing Example")
     print("=" * 40)
     
     # Create a simple test case
@@ -296,7 +308,7 @@ def demonstrate_algorithm_iteration():
 
 def main():
     """Run the complete example."""
-    print("🤖 Scheduler Complete Example")
+    print("Scheduler Complete Example")
     print("=" * 60)
     print()
     
@@ -308,21 +320,15 @@ def main():
     testing_results = run_testing_example()
     print()
     
-    # Demonstrate algorithm iteration
-    demonstrate_algorithm_iteration()
+    # Demonstrate multiple scheduler testing
+    demonstrate_multiple_scheduler_testing()
     
-    print("🎯 Summary:")
+    print("Summary:")
     print("1. ✅ Created tasks with time windows and constraints")
     print("2. ✅ Created resources (integer and cumulative rate)")
     print("3. ✅ Ran scheduling algorithm")
-    print("4. ✅ Tested with multiple test cases")
-    print("5. ✅ Demonstrated algorithm iteration")
-    print()
-    print("📚 Next steps:")
-    print("- Implement your own scheduling algorithms")
-    print("- Create more complex test scenarios")
-    print("- Add performance metrics and optimization")
-    print("- Integrate with your robot control system")
+    print("4. ✅ Tested testing single scheduler")
+    print("5. ✅ Demonstrated multiple scheduler testing")
 
 
 if __name__ == "__main__":

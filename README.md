@@ -19,7 +19,6 @@ See `SCHEDULER_GUIDE.md` for detailed usage instructions and examples.
 ```
 /app/
 ├── spacecraft_scheduler/                # Main scheduler project
-│   ├── scheduler_demo.py               # Complete demo and usage guide
 │   ├── scheduler.py                    # Main algorithm comparison script
 │   ├── scheduler_example.py            # Comprehensive example with testing
 │   ├── SCHEDULER_GUIDE.md              # Detailed usage guide
