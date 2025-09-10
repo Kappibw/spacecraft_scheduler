@@ -2,14 +2,14 @@
 MILP-based scheduling algorithm for robot using the new models.
 """
 
-from typing import List, Dict, Any, Optional
+from typing import List, Dict
 from datetime import datetime, timedelta
 import gurobipy as gp
 from gurobipy import GRB
 
 from ..base import BaseScheduler, ScheduleResult, ScheduleStatus, ScheduledTask
 from ...common.tasks.task import Task, TaskConstraintType
-from ...common.resources.resource import Resource, ResourceType
+from ...common.resources.resource import Resource
 
 
 class MILPScheduler(BaseScheduler):

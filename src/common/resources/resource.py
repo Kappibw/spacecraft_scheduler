@@ -271,7 +271,7 @@ class Resource:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EnduranceResource":
+    def from_dict(cls, data: Dict[str, Any]) -> "Resource":
         """Create resource from dictionary representation."""
         current_state_data = data.get("current_state", {})
         current_state = ResourceState(

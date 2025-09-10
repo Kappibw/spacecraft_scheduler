@@ -2,9 +2,9 @@
 
 This guide explains how to use the consolidated Scheduler scheduler codebase to add tasks, create tests, and iterate on algorithms.
 
-## 🏗️ Consolidated Architecture
+## Architecture
 
-The codebase has been consolidated into a clean, unified architecture:
+The codebase defines the objects necessary for simulating spacecraft task scheduling:
 
 ### Core Models
 - **`SchedulerTask`**: Represents tasks with time windows, duration ranges, and constraints
@@ -16,7 +16,7 @@ The codebase has been consolidated into a clean, unified architecture:
 - **`SchedulerTaskManager`**: Manages tasks and their relationships
 - **`SchedulerResourceManager`**: Manages resources and their state
 
-### Algorithms (Consolidated)
+### Algorithms
 - **`BaseScheduler`**: Single base class for all scheduling algorithms
 - **`SchedulerSimpleScheduler`**: Simple priority-based scheduler
 - **`MILPScheduler`**: MILP-based scheduler using Gurobi
@@ -26,62 +26,33 @@ The codebase has been consolidated into a clean, unified architecture:
 - **`SchedulerTestRunner`**: Runs test cases against schedulers
 - **`SchedulerTestCaseBuilder`**: Helper for creating test cases
 
-## 📁 File Structure
-
-```
-/app/
-├── spacecraft_scheduler/                # Main scheduler project
-│   ├── endurance_scheduler_demo.py     # Complete demo and usage guide
-│   ├── endurance_scheduler.py          # Main algorithm comparison script
-│   ├── endurance_scheduler_example.py  # Comprehensive example with testing
-│   ├── ENDURANCE_SCHEDULER_GUIDE.md   # This guide
-│   └── src/
-│       ├── algorithms/
-│       │   ├── base.py                 # Single base class for all schedulers
-│       │   ├── endurance_simple_scheduler.py
-│       │   └── milp/
-│       │       └── endurance_milp_scheduler.py
-│       ├── common/
-│       │   ├── tasks/
-│       │   │   ├── endurance_task.py
-│       │   │   └── endurance_task_manager.py
-│       │   └── resources/
-│       │       ├── endurance_resource.py
-│       │       └── endurance_resource_manager.py
-│       └── testing/
-│           └── endurance_test_framework.py
-├── results/                            # Generated outputs (shared)
-├── logs/                               # Log files (shared)
-└── data/                               # Data files (shared)
-```
-
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Run the Complete Demo
 ```bash
-python endurance_scheduler_demo.py
+python scheduler_demo.py
 ```
 This shows the complete workflow: creating tasks, resources, running algorithms, and testing.
 
 ### 2. Run Algorithm Comparison
 ```bash
-python endurance_scheduler.py
+python scheduler.py
 ```
 This compares different scheduling algorithms on various test cases.
 
 ### 3. Run Comprehensive Example
 ```bash
-python endurance_scheduler_example.py
+python scheduler_example.py
 ```
 This shows a complete example with testing and algorithm iteration.
 
-## 📋 Creating Tasks
+## Creating Tasks
 
 ### Basic Task Creation
 
 ```python
 from datetime import datetime, timedelta
-from src.common.tasks.endurance_task import SchedulerTask
+from src.common.tasks.task import SchedulerTask
 
 # Create a task with time window and duration range
 task = SchedulerTask.create(
@@ -99,7 +70,7 @@ task = SchedulerTask.create(
 ### Adding Task Constraints
 
 ```python
-from src.common.tasks.endurance_task import TaskConstraintType
+from src.common.tasks.task import TaskConstraintType
 
 # Task must start after another task ends
 task.add_task_constraint(
@@ -128,7 +99,7 @@ task.add_resource_constraint(
 ### Adding Resource Impacts
 
 ```python
-from src.common.tasks.endurance_task import ResourceImpactType
+from src.common.tasks.task import ResourceImpactType
 
 # Task changes resource consumption rate
 task.add_resource_impact(
@@ -145,12 +116,12 @@ task.add_resource_impact(
 )
 ```
 
-## 🔧 Creating Resources
+## Creating Resources
 
 ### Integer Resources (Discrete Capacity)
 
 ```python
-from src.common.resources.endurance_resource import SchedulerResource
+from src.common.resources.resource import SchedulerResource
 
 # Create a gripper that can hold 1 object
 gripper = SchedulerResource.create_integer_resource(
@@ -189,7 +160,7 @@ fuel = SchedulerResource.create_cumulative_rate_resource(
 )
 ```
 
-## 🤖 Creating Scheduling Algorithms
+## Creating Scheduling Algorithms
 
 ### Basic Algorithm Structure
 
@@ -237,12 +208,12 @@ print(f"Scheduled: {result.total_scheduled_tasks} tasks")
 print(f"Unscheduled: {result.total_unscheduled_tasks} tasks")
 ```
 
-## 🧪 Testing Your Algorithms
+## Testing Your Algorithms
 
 ### Using the Test Framework
 
 ```python
-from src.testing.endurance_test_framework import SchedulerTestRunner, SchedulerTestCaseBuilder
+from src.testing.test_framework import SchedulerTestRunner, SchedulerTestCaseBuilder
 
 # Create test runner
 test_runner = SchedulerTestRunner()
@@ -265,7 +236,7 @@ print(report)
 ### Creating Custom Test Cases
 
 ```python
-from src.testing.endurance_test_framework import SchedulerTestCase
+from src.testing.test_framework import SchedulerTestCase
 
 # Create custom test case
 custom_test = SchedulerTestCase(
@@ -280,116 +251,3 @@ custom_test = SchedulerTestCase(
 # Add to test runner
 test_runner.add_test_case(custom_test)
 ```
-
-## 🔄 Algorithm Development Workflow
-
-### 1. Start Simple
-Begin with a basic algorithm that handles simple cases:
-- Sort tasks by priority
-- Schedule tasks in order
-- Check basic constraints
-
-### 2. Add Complexity Gradually
-- Add task dependency handling
-- Add resource constraint checking
-- Add time window validation
-
-### 3. Test and Iterate
-- Use the test framework to validate your algorithm
-- Test with different scenarios
-- Measure performance and success rates
-
-### 4. Optimize
-- Improve solution quality
-- Reduce computation time
-- Handle edge cases
-
-## 📊 Available Algorithms
-
-### SchedulerSimpleScheduler
-- **Type**: Priority-based greedy scheduler
-- **Use case**: Simple scenarios, fast execution
-- **Features**: Basic constraint checking, priority ordering
-
-### SchedulerMILPScheduler
-- **Type**: Mixed Integer Linear Programming
-- **Use case**: Complex scenarios, optimal solutions
-- **Features**: Gurobi integration, constraint optimization
-
-## 🎯 Best Practices
-
-### Task Design
-- Use realistic time windows
-- Set appropriate duration ranges
-- Add meaningful constraints
-- Use priority levels effectively
-
-### Resource Design
-- Choose appropriate resource types
-- Set realistic capacities
-- Consider resource impacts
-- Plan for resource conflicts
-
-### Algorithm Development
-- Start with simple implementations
-- Test thoroughly with the framework
-- Handle edge cases gracefully
-- Document your approach
-
-### Testing
-- Create diverse test scenarios
-- Test with different task counts
-- Measure both success rate and performance
-- Validate constraint satisfaction
-
-## 🚨 Common Pitfalls
-
-### Task Constraints
-- Don't create impossible time windows
-- Ensure duration ranges are realistic
-- Check constraint consistency
-
-### Resource Management
-- Don't exceed resource capacities
-- Handle resource conflicts properly
-- Consider resource state changes
-
-### Algorithm Design
-- Don't ignore constraint validation
-- Handle unschedulable tasks gracefully
-- Provide meaningful error messages
-
-## 📚 Example Files
-
-- **`endurance_scheduler_demo.py`**: Complete demo showing all features
-- **`endurance_scheduler.py`**: Algorithm comparison and benchmarking
-- **`endurance_scheduler_example.py`**: Comprehensive example with testing
-
-## 🔗 Integration
-
-### With Robot Control Systems
-```python
-# Convert schedule to robot commands
-for scheduled_task in result.schedule:
-    robot_command = {
-        "task_id": scheduled_task.task_id,
-        "start_time": scheduled_task.start_time,
-        "end_time": scheduled_task.end_time,
-        "resources": scheduled_task.resource_allocations
-    }
-    # Send to robot control system
-    robot_controller.schedule_task(robot_command)
-```
-
-### With External Systems
-```python
-# Export schedule to external format
-schedule_data = result.to_dict()
-# Save to file or send to external system
-```
-
-## 🎉 Conclusion
-
-The consolidated Scheduler scheduler provides a clean, unified architecture for robot task scheduling. Use the demo files to understand the system, implement your own algorithms, and test them thoroughly with the provided framework.
-
-For questions or issues, refer to the example files or create test cases to validate your understanding.

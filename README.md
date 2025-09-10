@@ -1,25 +1,20 @@
 # Scheduler
 
-A comprehensive task scheduling system for robotic applications with support for complex constraints, resource management, and multiple scheduling algorithms.
+A comprehensive task scheduling system for space robotic applications with support for complex constraints, resource management, and multiple scheduling algorithms.
 
-## 🚀 Quick Start
+## Development - Important!
 
-### Run the Complete Demo
-```bash
-python scheduler_demo.py
-```
+This project is developed in a containerized environment. It should be run as a submodule inside the
+`spacecraft_scheduler_config` repo, which can be found [here](https://github.com/Kappibw/spacecraft_scheduler_config).
 
-### Run Algorithm Comparison
-```bash
-python scheduler.py
-```
+The config wrapper repo will take care of building the docker container with all necessary dependencies as well
+as the licensing for the Gurobi solver.
 
-### Run Comprehensive Example
-```bash
-python scheduler_example.py
-```
+## Documentation
 
-## 📁 Project Structure
+See `SCHEDULER_GUIDE.md` for detailed usage instructions and examples.
+
+## Project Structure
 
 ```
 /app/
@@ -38,54 +33,3 @@ python scheduler_example.py
 ├── logs/                              # Log files (shared)
 └── data/                              # Data files (shared)
 ```
-
-## 🏗️ Architecture
-
-### Core Models
-- **`Task`**: Tasks with time windows, duration ranges, and constraints
-- **`Resource`**: Resources (integer or cumulative rate types)
-- **`ScheduledTask`**: Scheduled tasks with start/end times
-- **`ScheduleResult`**: Scheduling operation results
-
-### Algorithms
-- **`SimpleScheduler`**: Priority-based greedy scheduler
-- **`MILPScheduler`**: MILP-based scheduler using Gurobi
-
-### Testing Framework
-- **`TestRunner`**: Runs test cases against schedulers
-- **`TestCase`**: Represents test scenarios
-
-## 📋 Features
-
-- ✅ Complex task constraints and dependencies
-- ✅ Multiple resource types (integer and cumulative rate)
-- ✅ Time window and duration range support
-- ✅ Priority-based scheduling
-- ✅ MILP optimization with Gurobi
-- ✅ Comprehensive testing framework
-- ✅ Visualization and reporting
-- ✅ Extensible algorithm architecture
-
-## 🧪 Testing
-
-Run the test suite:
-```bash
-python -m pytest tests/
-```
-
-## 📚 Documentation
-
-See `SCHEDULER_GUIDE.md` for detailed usage instructions and examples.
-
-## 🔧 Development
-
-This project is developed in a containerized environment. The git repository is set up inside the container for seamless development workflow.
-
-### Git Configuration
-- Repository initialized in container
-- User: Kappi Patterson (kappi.patterson@gmail.com)
-- Branch: main
-
-## 📄 License
-
-This project is part of the Scheduler robotic scheduling system.
