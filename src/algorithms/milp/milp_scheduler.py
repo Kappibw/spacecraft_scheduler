@@ -173,7 +173,7 @@ class MILPScheduler(BaseScheduler):
             )
     
     def _extract_solution(self, x: Dict, y: Dict, z: Dict, 
-                         tasks: List[EnduranceTask], time_horizon: int) -> List[EnduranceScheduledTask]:
+                         tasks: List[Task], time_horizon: int) -> List[ScheduledTask]:
         """Extract the solution from OR-Tools solver."""
         schedule = []
         
@@ -189,7 +189,7 @@ class MILPScheduler(BaseScheduler):
                 start_datetime = datetime.now() + timedelta(minutes=start_time)
                 end_datetime = start_datetime + task.preferred_duration
                 
-                scheduled_task = EnduranceScheduledTask(
+                scheduled_task = ScheduledTask(
                     task_id=task.id,
                     start_time=start_datetime,
                     end_time=end_datetime,
@@ -213,7 +213,7 @@ class MILPScheduler(BaseScheduler):
         
         return schedule
     
-    def _calculate_time_horizon(self, tasks: List[EnduranceTask]) -> int:
+    def _calculate_time_horizon(self, tasks: List[Task]) -> int:
         """Calculate the time horizon for scheduling."""
         if not tasks:
             return 100
