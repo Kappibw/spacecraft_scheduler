@@ -135,7 +135,7 @@ class TestRunner:
         failed_tests = total_tests - passed_tests
         
         report = []
-        report.append("🧪 Scheduler Test Report")
+        report.append("Scheduler Test Report")
         report.append("=" * 50)
         report.append(f"Total tests: {total_tests}")
         report.append(f"Passed: {passed_tests}")
@@ -148,7 +148,7 @@ class TestRunner:
         report.append("-" * 30)
         
         for result in self.results:
-            status = "✅" if result.passed else "❌"
+            status = "🟢 PASS" if result.passed else "🔴 FAIL"
             report.append(f"{status} {result.test_case.name}")
             report.append(f"   {result.message}")
             report.append(f"   Scheduled: {result.schedule_result.total_scheduled_tasks}/{len(result.test_case.tasks)}")

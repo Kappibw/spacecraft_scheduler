@@ -30,15 +30,20 @@ The codebase defines the objects necessary for simulating spacecraft task schedu
 
 ### 1. Run Algorithm Comparison
 ```bash
-python spacecraft_scheduler/scheduler.py
+python scheduler.py
 ```
 This compares different scheduling algorithms on various test cases.
 
 ### 2. Run Comprehensive Example
 ```bash
-python spacecraft_scheduler/scheduler_example.py
+python scheduler_example.py
 ```
 This shows a complete example with testing and algorithm iteration.
+
+### 3. Check Gurobi Installed and Licensed
+```bash
+python test_gurobi_integration.py
+```
 
 ## Creating Tasks
 

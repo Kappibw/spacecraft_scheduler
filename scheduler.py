@@ -103,7 +103,7 @@ def main():
     print("  - results/endurance_test_results.json")
     print("  - results/endurance_comparison_report.txt")
     
-    print("\n✅ Endurance scheduler development complete! "
+    print("\nEndurance scheduler development complete! "
           "Check the results/ directory for outputs.")
 
 

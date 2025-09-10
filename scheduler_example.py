@@ -302,7 +302,7 @@ def demonstrate_multiple_scheduler_testing():
         print(f"  Time limit: {scheduler.time_limit}s")
         print(f"  Success rate: {result.schedule_result.success_rate:.2%}")
         print(f"  Solve time: {result.solve_time:.2f}s")
-        print(f"  Status: {'✅ PASSED' if result.passed else '❌ FAILED'}")
+        print(f"  Status: {'PASSED' if result.passed else 'FAILED'}")
         print()
 
 
@@ -324,11 +324,11 @@ def main():
     demonstrate_multiple_scheduler_testing()
     
     print("Summary:")
-    print("1. ✅ Created tasks with time windows and constraints")
-    print("2. ✅ Created resources (integer and cumulative rate)")
-    print("3. ✅ Ran scheduling algorithm")
-    print("4. ✅ Tested testing single scheduler")
-    print("5. ✅ Demonstrated multiple scheduler testing")
+    print("1. Created tasks with time windows and constraints")
+    print("2. Created resources (integer and cumulative rate)")
+    print("3. Ran scheduling algorithm")
+    print("4. Tested testing single scheduler")
+    print("5. Demonstrated multiple scheduler testing")
 
 
 if __name__ == "__main__":
