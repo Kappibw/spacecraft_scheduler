@@ -79,6 +79,9 @@ def main():
     """Run all tests."""
     print("🧪 Testing Gurobi Integration")
     print("=" * 40)
+    print("Note: Make sure to install requirements with:")
+    print("pip install -r requirements/commercial.txt")
+    print()
     
     tests = [
         test_gurobi_import,

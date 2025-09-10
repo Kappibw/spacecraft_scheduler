@@ -61,7 +61,7 @@ python scheduler_example.py
 - ✅ Multiple resource types (integer and cumulative rate)
 - ✅ Time window and duration range support
 - ✅ Priority-based scheduling
-- ✅ MILP optimization with OR-Tools
+- ✅ MILP optimization with Gurobi
 - ✅ Comprehensive testing framework
 - ✅ Visualization and reporting
 - ✅ Extensible algorithm architecture
@@ -75,7 +75,7 @@ python -m pytest tests/
 
 ## 📚 Documentation
 
-See `ENDURANCE_SCHEDULER_GUIDE.md` for detailed usage instructions and examples.
+See `SCHEDULER_GUIDE.md` for detailed usage instructions and examples.
 
 ## 🔧 Development
 
