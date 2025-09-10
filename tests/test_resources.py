@@ -3,7 +3,6 @@ Tests for resource management functionality.
 """
 
 import pytest
-from datetime import datetime
 
 from src.common.resources import Resource, ResourceType, ResourceStatus, ResourceManager
 
