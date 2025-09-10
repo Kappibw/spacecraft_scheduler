@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Endurance Scheduler - Robot scheduling algorithm development and comparison
-for the Endurance robot.
+Scheduler - Robot scheduling algorithm development and comparison
+for the robot.
 """
 
 import sys
@@ -10,24 +10,24 @@ import matplotlib.pyplot as plt
 
 sys.path.append('/app')
 
-from src.testing.endurance_test_framework import EnduranceTestCaseBuilder, EnduranceTestRunner
-from src.algorithms.endurance_simple_scheduler import EnduranceSimpleScheduler
-from src.algorithms.milp.endurance_milp_scheduler import EnduranceMILPScheduler
+from src.testing.test_framework import TestCaseBuilder, TestRunner
+from src.algorithms.simple_scheduler import SimpleScheduler
+from src.algorithms.milp.milp_scheduler import MILPScheduler
 
 
 def main():
-    """Run Endurance robot scheduling algorithm development and comparison."""
-    print("🤖 Endurance Robot Scheduling Algorithm Development")
+    """Run robot scheduling algorithm development and comparison."""
+    print("🤖 Robot Scheduling Algorithm Development")
     print("=" * 60)
     
     # Create test cases
     print("\n📋 Creating test cases...")
-    test_runner = EnduranceTestRunner()
+    test_runner = TestRunner()
     
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_simple_test())
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_dependency_test())
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_resource_constrained_test())
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_stress_test(num_tasks=10))
+    test_runner.add_test_case(TestCaseBuilder.create_simple_test())
+    test_runner.add_test_case(TestCaseBuilder.create_dependency_test())
+    test_runner.add_test_case(TestCaseBuilder.create_resource_constrained_test())
+    test_runner.add_test_case(TestCaseBuilder.create_stress_test(num_tasks=10))
     
     print(f"Created {len(test_runner.test_cases)} test cases:")
     for i, test_case in enumerate(test_runner.test_cases, 1):
@@ -37,8 +37,8 @@ def main():
     # Initialize algorithms
     print("\n🤖 Initializing algorithms...")
     algorithms = [
-        EnduranceSimpleScheduler(time_limit=60),
-        EnduranceMILPScheduler(time_limit=60),
+        SimpleScheduler(time_limit=60),
+        MILPScheduler(time_limit=60),
         # Add more algorithms here as you develop them
     ]
     

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Endurance Scheduler - Complete Demo and Usage Guide
-==================================================
+Scheduler - Complete Demo and Usage Guide
+========================================
 
 This comprehensive demo shows how to:
 1. Create tasks with time windows and constraints
@@ -20,26 +20,26 @@ from typing import List, Dict, Any
 
 sys.path.append('/app')
 
-from src.common.tasks.endurance_task import EnduranceTask, TaskConstraintType
-from src.common.resources.endurance_resource import (
-    EnduranceResource, ResourceType, ResourceStatus
+from src.common.tasks.task import Task, TaskConstraintType
+from src.common.resources.resource import (
+    Resource, ResourceType, ResourceStatus
 )
-from src.common.tasks.endurance_task_manager import EnduranceTaskManager
-from src.common.resources.endurance_resource_manager import EnduranceResourceManager
-from src.algorithms.endurance_simple_scheduler import EnduranceSimpleScheduler
-from src.algorithms.milp.endurance_milp_scheduler import EnduranceMILPScheduler
-from src.algorithms.base import EnduranceScheduleResult, ScheduleStatus
-from src.testing.endurance_test_framework import (
-    EnduranceTestRunner, EnduranceTestCaseBuilder
+from src.common.tasks.task_manager import TaskManager
+from src.common.resources.resource_manager import ResourceManager
+from src.algorithms.simple_scheduler import SimpleScheduler
+from src.algorithms.milp.milp_scheduler import MILPScheduler
+from src.algorithms.base import ScheduleResult, ScheduleStatus
+from src.testing.test_framework import (
+    TestRunner, TestCaseBuilder
 )
 
 
-class EnduranceSchedulerDemo:
-    """Comprehensive demo of the Endurance scheduler system."""
+class SchedulerDemo:
+    """Comprehensive demo of the scheduler system."""
     
     def __init__(self):
-        self.task_manager = EnduranceTaskManager()
-        self.resource_manager = EnduranceResourceManager()
+        self.task_manager = TaskManager()
+        self.resource_manager = ResourceManager()
     
     def demo_1_basic_usage(self):
         """Demo 1: Basic task and resource creation."""
@@ -52,7 +52,7 @@ class EnduranceSchedulerDemo:
         print("📋 Creating tasks...")
         
         # Task 1: Simple inspection task
-        task1 = EnduranceTask.create(
+        task1 = Task.create(
             name="Inspect equipment",
             description="Visual inspection of equipment at location A",
             start_time=base_time,
@@ -64,7 +64,7 @@ class EnduranceSchedulerDemo:
         )
         
         # Task 2: Pick up task with resource constraint
-        task2 = EnduranceTask.create(
+        task2 = Task.create(
             name="Pick up object",
             description="Pick up object requiring gripper",
             start_time=base_time + timedelta(minutes=30),
@@ -76,7 +76,7 @@ class EnduranceSchedulerDemo:
         )
         
         # Task 3: Transport task with dependency
-        task3 = EnduranceTask.create(
+        task3 = Task.create(
             name="Transport object",
             description="Transport the picked up object to destination",
             start_time=base_time + timedelta(hours=1),
@@ -106,14 +106,14 @@ class EnduranceSchedulerDemo:
         print("\n🔧 Creating resources...")
         
         # Integer resource: Gripper
-        gripper = EnduranceResource.create_integer_resource(
+        gripper = Resource.create_integer_resource(
             name="Gripper",
             description="Robot gripper for picking up objects",
             max_capacity=1.0
         )
         
         # Cumulative rate resource: Battery
-        battery = EnduranceResource.create_cumulative_rate_resource(
+        battery = Resource.create_cumulative_rate_resource(
             name="Battery",
             description="Robot battery power",
             initial_value=100.0,
@@ -140,7 +140,7 @@ class EnduranceSchedulerDemo:
         
         return tasks, resources
     
-    def demo_2_scheduling_algorithms(self, tasks: List[EnduranceTask], resources: List[EnduranceResource]):
+    def demo_2_scheduling_algorithms(self, tasks: List[Task], resources: List[Resource]):
         """Demo 2: Running different scheduling algorithms."""
         print("\n🤖 Demo 2: Scheduling Algorithms")
         print("=" * 50)
@@ -153,8 +153,8 @@ class EnduranceSchedulerDemo:
         
         # Test different algorithms
         algorithms = [
-            EnduranceSimpleScheduler(time_limit=60),
-            EnduranceMILPScheduler(time_limit=60)
+            SimpleScheduler(time_limit=60),
+            MILPScheduler(time_limit=60)
         ]
         
         for algorithm in algorithms:
@@ -187,21 +187,21 @@ class EnduranceSchedulerDemo:
         print("=" * 50)
         
         # Create test runner
-        test_runner = EnduranceTestRunner()
+        test_runner = TestRunner()
         
         # Add various test cases
         print("Creating test cases...")
-        test_runner.add_test_case(EnduranceTestCaseBuilder.create_simple_test())
-        test_runner.add_test_case(EnduranceTestCaseBuilder.create_dependency_test())
-        test_runner.add_test_case(EnduranceTestCaseBuilder.create_resource_constrained_test())
-        test_runner.add_test_case(EnduranceTestCaseBuilder.create_stress_test(num_tasks=5))
+        test_runner.add_test_case(TestCaseBuilder.create_simple_test())
+        test_runner.add_test_case(TestCaseBuilder.create_dependency_test())
+        test_runner.add_test_case(TestCaseBuilder.create_resource_constrained_test())
+        test_runner.add_test_case(TestCaseBuilder.create_stress_test(num_tasks=5))
         
         print(f"Created {len(test_runner.test_cases)} test cases")
         
         # Test algorithms
         algorithms = [
-            EnduranceSimpleScheduler(time_limit=30),
-            EnduranceMILPScheduler(time_limit=30)
+            SimpleScheduler(time_limit=30),
+            MILPScheduler(time_limit=30)
         ]
         
         for algorithm in algorithms:
@@ -225,9 +225,9 @@ class EnduranceSchedulerDemo:
         print()
         print("1. Create a new scheduler class:")
         print("""
-from src.algorithms.base import BaseScheduler, EnduranceScheduleResult, ScheduleStatus
+from src.algorithms.base import BaseScheduler, ScheduleResult, ScheduleStatus
 
-class MyEnduranceScheduler(BaseScheduler):
+class MyScheduler(BaseScheduler):
     def __init__(self, time_limit: float = 300.0):
         super().__init__("My Algorithm", time_limit)
     
@@ -256,7 +256,7 @@ class MyEnduranceScheduler(BaseScheduler):
 tasks, resources = create_test_scenario()
 
 # Test your algorithm
-scheduler = MyEnduranceScheduler()
+scheduler = MyScheduler()
 scheduler.set_managers(task_manager, resource_manager)
 result = scheduler.schedule(tasks, resources)
 
@@ -300,9 +300,9 @@ print(f"Scheduled: {result.total_scheduled_tasks} tasks")
     
     def run_complete_demo(self):
         """Run the complete demonstration."""
-        print("🚀 Endurance Scheduler - Complete Demo")
+        print("🚀 Scheduler - Complete Demo")
         print("=" * 60)
-        print("This demo shows the complete workflow for using the Endurance scheduler.")
+        print("This demo shows the complete workflow for using the scheduler.")
         print()
         
         # Demo 1: Basic usage
@@ -344,7 +344,7 @@ print(f"Scheduled: {result.total_scheduled_tasks} tasks")
 
 def main():
     """Run the complete demo."""
-    demo = EnduranceSchedulerDemo()
+    demo = SchedulerDemo()
     demo.run_complete_demo()
 
 

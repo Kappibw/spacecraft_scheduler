@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Complete example of using the Endurance scheduler codebase.
+Complete example of using the scheduler codebase.
 This demonstrates the full workflow from creating tasks to running algorithms.
 """
 
@@ -10,21 +10,21 @@ from datetime import datetime, timedelta
 
 sys.path.append('/app')
 
-from src.common.tasks.endurance_task import EnduranceTask, TaskConstraintType
-from src.common.resources.endurance_resource import (
-    EnduranceResource, ResourceType, ResourceStatus
+from src.common.tasks.task import Task, TaskConstraintType
+from src.common.resources.resource import (
+    Resource, ResourceType, ResourceStatus
 )
-from src.common.tasks.endurance_task_manager import EnduranceTaskManager
-from src.common.resources.endurance_resource_manager import EnduranceResourceManager
-from src.algorithms.endurance_simple_scheduler import EnduranceSimpleScheduler
-from src.algorithms.base import EnduranceScheduleResult, ScheduleStatus
-from src.testing.endurance_test_framework import (
-    EnduranceTestRunner, EnduranceTestCaseBuilder
+from src.common.tasks.task_manager import TaskManager
+from src.common.resources.resource_manager import ResourceManager
+from src.algorithms.simple_scheduler import SimpleScheduler
+from src.algorithms.base import ScheduleResult, ScheduleStatus
+from src.testing.test_framework import (
+    TestRunner, TestCaseBuilder
 )
 
 
 def create_warehouse_scenario():
-    """Create a realistic warehouse scenario with the Endurance robot."""
+    """Create a realistic warehouse scenario with the robot."""
     print("🏭 Creating Warehouse Scenario")
     print("=" * 40)
     
@@ -34,21 +34,21 @@ def create_warehouse_scenario():
     print("Creating resources...")
     
     # Gripper (can hold 1 object at a time)
-    gripper = EnduranceResource.create_integer_resource(
+    gripper = Resource.create_integer_resource(
         name="Gripper",
         description="Robot gripper for picking up objects",
         max_capacity=1.0
     )
     
     # Storage bay (can hold 2 objects)
-    storage = EnduranceResource.create_integer_resource(
+    storage = Resource.create_integer_resource(
         name="Storage Bay",
         description="Storage bay for carrying objects",
         max_capacity=2.0
     )
     
     # Battery (starts at 100%, drains over time)
-    battery = EnduranceResource.create_cumulative_rate_resource(
+    battery = Resource.create_cumulative_rate_resource(
         name="Battery",
         description="Robot battery power",
         initial_value=100.0,
@@ -57,7 +57,7 @@ def create_warehouse_scenario():
     )
     
     # Fuel tank (starts at 50L, can be refilled)
-    fuel = EnduranceResource.create_cumulative_rate_resource(
+    fuel = Resource.create_cumulative_rate_resource(
         name="Fuel Tank",
         description="Robot fuel tank",
         initial_value=50.0,
@@ -72,7 +72,7 @@ def create_warehouse_scenario():
     print("Creating tasks...")
     
     # Task 1: Pick up package A
-    task1 = EnduranceTask.create(
+    task1 = Task.create(
         name="Pick up Package A",
         description="Pick up package A from location 1",
         start_time=base_time,
@@ -98,7 +98,7 @@ def create_warehouse_scenario():
     )
     
     # Task 2: Pick up package B
-    task2 = EnduranceTask.create(
+    task2 = Task.create(
         name="Pick up Package B",
         description="Pick up package B from location 2",
         start_time=base_time + timedelta(minutes=10),
@@ -124,7 +124,7 @@ def create_warehouse_scenario():
     )
     
     # Task 3: Transport packages (must start after both pickups)
-    task3 = EnduranceTask.create(
+    task3 = Task.create(
         name="Transport Packages",
         description="Transport packages A and B to destination",
         start_time=base_time + timedelta(minutes=20),
@@ -160,7 +160,7 @@ def create_warehouse_scenario():
     )
     
     # Task 4: Drop off packages
-    task4 = EnduranceTask.create(
+    task4 = Task.create(
         name="Drop off Packages",
         description="Drop off packages at destination",
         start_time=base_time + timedelta(minutes=30),
@@ -192,8 +192,8 @@ def run_scheduling_example():
     tasks, resources = create_warehouse_scenario()
     
     # Create managers
-    task_manager = EnduranceTaskManager()
-    resource_manager = EnduranceResourceManager()
+    task_manager = TaskManager()
+    resource_manager = ResourceManager()
     
     for task in tasks:
         task_manager.add_task(task)
@@ -202,7 +202,7 @@ def run_scheduling_example():
         resource_manager.add_resource(resource)
     
     # Create scheduler
-    scheduler = EnduranceSimpleScheduler(time_limit=60.0)
+    scheduler = SimpleScheduler(time_limit=60.0)
     scheduler.set_managers(task_manager, resource_manager)
     
     # Run scheduling
@@ -242,16 +242,16 @@ def run_testing_example():
     print("=" * 40)
     
     # Create test runner
-    test_runner = EnduranceTestRunner()
+    test_runner = TestRunner()
     
     # Add test cases
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_simple_test())
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_dependency_test())
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_resource_constrained_test())
-    test_runner.add_test_case(EnduranceTestCaseBuilder.create_stress_test(num_tasks=5))
+    test_runner.add_test_case(TestCaseBuilder.create_simple_test())
+    test_runner.add_test_case(TestCaseBuilder.create_dependency_test())
+    test_runner.add_test_case(TestCaseBuilder.create_resource_constrained_test())
+    test_runner.add_test_case(TestCaseBuilder.create_stress_test(num_tasks=5))
     
     # Create scheduler
-    scheduler = EnduranceSimpleScheduler()
+    scheduler = SimpleScheduler()
     
     # Run all tests
     print("Running tests...")
@@ -270,18 +270,18 @@ def demonstrate_algorithm_iteration():
     print("=" * 40)
     
     # Create a simple test case
-    test_case = EnduranceTestCaseBuilder.create_simple_test()
+    test_case = TestCaseBuilder.create_simple_test()
     
     # Test different scheduler configurations
     schedulers = [
-        EnduranceSimpleScheduler(time_limit=1.0),
-        EnduranceSimpleScheduler(time_limit=5.0),
-        EnduranceSimpleScheduler(time_limit=10.0),
+        SimpleScheduler(time_limit=1.0),
+        SimpleScheduler(time_limit=5.0),
+        SimpleScheduler(time_limit=10.0),
     ]
     
     print("Testing different time limits:")
     for scheduler in schedulers:
-        test_runner = EnduranceTestRunner()
+        test_runner = TestRunner()
         test_runner.add_test_case(test_case)
         
         results = test_runner.run_all_tests(scheduler)
@@ -296,7 +296,7 @@ def demonstrate_algorithm_iteration():
 
 def main():
     """Run the complete example."""
-    print("🤖 Endurance Scheduler Complete Example")
+    print("🤖 Scheduler Complete Example")
     print("=" * 60)
     print()
     

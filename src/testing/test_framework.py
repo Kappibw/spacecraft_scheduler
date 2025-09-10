@@ -1,5 +1,5 @@
 """
-Test framework for Endurance scheduler algorithms.
+Test framework for scheduler algorithms.
 """
 
 import sys
@@ -10,32 +10,32 @@ import time
 
 sys.path.append('/app')
 
-from src.common.tasks.endurance_task import EnduranceTask, TaskConstraintType
-from src.common.resources.endurance_resource import (
-    EnduranceResource, ResourceType, ResourceStatus
+from src.common.tasks.task import Task, TaskConstraintType
+from src.common.resources.resource import (
+    Resource, ResourceType, ResourceStatus
 )
-from src.common.tasks.endurance_task_manager import EnduranceTaskManager
-from src.common.resources.endurance_resource_manager import EnduranceResourceManager
-from src.algorithms.base import BaseScheduler, EnduranceScheduleResult, ScheduleStatus
+from src.common.tasks.task_manager import TaskManager
+from src.common.resources.resource_manager import ResourceManager
+from src.algorithms.base import BaseScheduler, ScheduleResult, ScheduleStatus
 
 
-class EnduranceTestCase:
-    """Represents a test case for the Endurance scheduler."""
+class TestCase:
+    """Represents a test case for the scheduler."""
     
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
-        self.tasks: List[EnduranceTask] = []
-        self.resources: List[EnduranceResource] = []
+        self.tasks: List[Task] = []
+        self.resources: List[Resource] = []
         self.expected_min_success_rate: float = 0.0
         self.expected_max_solve_time: float = float('inf')
         self.metadata: Dict[str, Any] = {}
     
-    def add_task(self, task: EnduranceTask) -> None:
+    def add_task(self, task: Task) -> None:
         """Add a task to the test case."""
         self.tasks.append(task)
     
-    def add_resource(self, resource: EnduranceResource) -> None:
+    def add_resource(self, resource: Resource) -> None:
         """Add a resource to the test case."""
         self.resources.append(resource)
     
@@ -45,10 +45,10 @@ class EnduranceTestCase:
         self.expected_max_solve_time = max_solve_time
 
 
-class EnduranceTestResult:
+class TestResult:
     """Represents the result of running a test case."""
     
-    def __init__(self, test_case: EnduranceTestCase, schedule_result: EnduranceScheduleResult, solve_time: float):
+    def __init__(self, test_case: TestCase, schedule_result: ScheduleResult, solve_time: float):
         self.test_case = test_case
         self.schedule_result = schedule_result
         self.solve_time = solve_time
@@ -80,24 +80,24 @@ class EnduranceTestResult:
             return f"FAILED - {', '.join(issues)}"
 
 
-class EnduranceTestRunner:
-    """Runs test cases against Endurance schedulers."""
+class TestRunner:
+    """Runs test cases against schedulers."""
     
     def __init__(self):
-        self.test_cases: List[EnduranceTestCase] = []
-        self.results: List[EnduranceTestResult] = []
+        self.test_cases: List[TestCase] = []
+        self.results: List[TestResult] = []
     
-    def add_test_case(self, test_case: EnduranceTestCase) -> None:
+    def add_test_case(self, test_case: TestCase) -> None:
         """Add a test case to the runner."""
         self.test_cases.append(test_case)
     
-    def run_test(self, scheduler: BaseScheduler, test_case: EnduranceTestCase) -> EnduranceTestResult:
+    def run_test(self, scheduler: BaseScheduler, test_case: TestCase) -> TestResult:
         """Run a single test case against a scheduler."""
         start_time = time.time()
         
         # Set up managers
-        task_manager = EnduranceTaskManager()
-        resource_manager = EnduranceResourceManager()
+        task_manager = TaskManager()
+        resource_manager = ResourceManager()
         
         for task in test_case.tasks:
             task_manager.add_task(task)
@@ -112,9 +112,9 @@ class EnduranceTestRunner:
         
         solve_time = time.time() - start_time
         
-        return EnduranceTestResult(test_case, schedule_result, solve_time)
+        return TestResult(test_case, schedule_result, solve_time)
     
-    def run_all_tests(self, scheduler: BaseScheduler) -> List[EnduranceTestResult]:
+    def run_all_tests(self, scheduler: BaseScheduler) -> List[TestResult]:
         """Run all test cases against a scheduler."""
         results = []
         
@@ -135,7 +135,7 @@ class EnduranceTestRunner:
         failed_tests = total_tests - passed_tests
         
         report = []
-        report.append("🧪 Endurance Scheduler Test Report")
+        report.append("🧪 Scheduler Test Report")
         report.append("=" * 50)
         report.append(f"Total tests: {total_tests}")
         report.append(f"Passed: {passed_tests}")
@@ -157,13 +157,13 @@ class EnduranceTestRunner:
         return "\n".join(report)
 
 
-class EnduranceTestCaseBuilder:
+class TestCaseBuilder:
     """Builder for creating test cases."""
     
     @staticmethod
-    def create_simple_test() -> EnduranceTestCase:
+    def create_simple_test() -> TestCase:
         """Create a simple test case with basic tasks."""
-        test_case = EnduranceTestCase(
+        test_case = TestCase(
             name="Simple Test",
             description="Basic test with 3 independent tasks"
         )
@@ -172,7 +172,7 @@ class EnduranceTestCaseBuilder:
         
         # Create 3 simple tasks
         for i in range(3):
-            task = EnduranceTask.create(
+            task = Task.create(
                 name=f"Task {i+1}",
                 description=f"Simple task {i+1}",
                 start_time=base_time + timedelta(minutes=i*30),
@@ -185,14 +185,14 @@ class EnduranceTestCaseBuilder:
             test_case.add_task(task)
         
         # Create basic resources
-        gripper = EnduranceResource.create_integer_resource(
+        gripper = Resource.create_integer_resource(
             name="Gripper",
             description="Robot gripper",
             max_capacity=1.0
         )
         test_case.add_resource(gripper)
         
-        battery = EnduranceResource.create_cumulative_rate_resource(
+        battery = Resource.create_cumulative_rate_resource(
             name="Battery",
             description="Robot battery",
             initial_value=100.0,
@@ -206,9 +206,9 @@ class EnduranceTestCaseBuilder:
         return test_case
     
     @staticmethod
-    def create_dependency_test() -> EnduranceTestCase:
+    def create_dependency_test() -> TestCase:
         """Create a test case with task dependencies."""
-        test_case = EnduranceTestCase(
+        test_case = TestCase(
             name="Dependency Test",
             description="Test with task dependencies"
         )
@@ -218,7 +218,7 @@ class EnduranceTestCaseBuilder:
         # Create a chain of dependent tasks
         tasks = []
         for i in range(4):
-            task = EnduranceTask.create(
+            task = Task.create(
                 name=f"Chain Task {i+1}",
                 description=f"Task {i+1} in dependency chain",
                 start_time=base_time + timedelta(minutes=i*20),
@@ -240,7 +240,7 @@ class EnduranceTestCaseBuilder:
             test_case.add_task(task)
         
         # Create resources
-        gripper = EnduranceResource.create_integer_resource(
+        gripper = Resource.create_integer_resource(
             name="Gripper",
             description="Robot gripper",
             max_capacity=1.0
@@ -252,9 +252,9 @@ class EnduranceTestCaseBuilder:
         return test_case
     
     @staticmethod
-    def create_resource_constrained_test() -> EnduranceTestCase:
+    def create_resource_constrained_test() -> TestCase:
         """Create a test case with resource constraints."""
-        test_case = EnduranceTestCase(
+        test_case = TestCase(
             name="Resource Constrained Test",
             description="Test with resource constraints"
         )
@@ -263,7 +263,7 @@ class EnduranceTestCaseBuilder:
         
         # Create tasks that compete for the same resource
         for i in range(3):
-            task = EnduranceTask.create(
+            task = Task.create(
                 name=f"Resource Task {i+1}",
                 description=f"Task {i+1} requiring gripper",
                 start_time=base_time + timedelta(minutes=i*10),
@@ -284,7 +284,7 @@ class EnduranceTestCaseBuilder:
             test_case.add_task(task)
         
         # Create the constrained resource
-        gripper = EnduranceResource.create_integer_resource(
+        gripper = Resource.create_integer_resource(
             name="Gripper",
             description="Robot gripper (limited capacity)",
             max_capacity=1.0
@@ -297,9 +297,9 @@ class EnduranceTestCaseBuilder:
         return test_case
     
     @staticmethod
-    def create_stress_test(num_tasks: int = 10, num_robots: int = 1) -> EnduranceTestCase:
+    def create_stress_test(num_tasks: int = 10, num_robots: int = 1) -> TestCase:
         """Create a stress test with many tasks."""
-        test_case = EnduranceTestCase(
+        test_case = TestCase(
             name=f"Stress Test ({num_tasks} tasks)",
             description=f"Stress test with {num_tasks} tasks"
         )
@@ -308,7 +308,7 @@ class EnduranceTestCaseBuilder:
         
         # Create many tasks
         for i in range(num_tasks):
-            task = EnduranceTask.create(
+            task = Task.create(
                 name=f"Stress Task {i+1}",
                 description=f"Task {i+1} for stress testing",
                 start_time=base_time + timedelta(minutes=i*5),
@@ -322,7 +322,7 @@ class EnduranceTestCaseBuilder:
         
         # Create resources
         for i in range(num_robots):
-            gripper = EnduranceResource.create_integer_resource(
+            gripper = Resource.create_integer_resource(
                 name=f"Gripper {i+1}",
                 description=f"Robot gripper {i+1}",
                 max_capacity=1.0

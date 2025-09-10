@@ -1,32 +1,32 @@
 """
-MILP-based scheduling algorithm for Endurance robot using the new models.
+MILP-based scheduling algorithm for robot using the new models.
 """
 
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 from ortools.linear_solver import pywraplp
 
-from ..base import BaseScheduler, EnduranceScheduleResult, ScheduleStatus, EnduranceScheduledTask
-from ...common.tasks.endurance_task import EnduranceTask, TaskConstraintType
-from ...common.resources.endurance_resource import EnduranceResource, ResourceType
+from ..base import BaseScheduler, ScheduleResult, ScheduleStatus, ScheduledTask
+from ...common.tasks.task import Task, TaskConstraintType
+from ...common.resources.resource import Resource, ResourceType
 
 
-class EnduranceMILPScheduler(BaseScheduler):
-    """MILP scheduler for Endurance robot using the new task and resource models."""
+class MILPScheduler(BaseScheduler):
+    """MILP scheduler for robot using the new task and resource models."""
     
     def __init__(self, time_limit: int = 300):
-        super().__init__("EnduranceMILPScheduler", time_limit)
+        super().__init__("MILPScheduler", time_limit)
     
-    def schedule(self, tasks: List[EnduranceTask], resources: List[EnduranceResource]) -> EnduranceScheduleResult:
+    def schedule(self, tasks: List[Task], resources: List[Resource]) -> ScheduleResult:
         """
         Schedule tasks using OR-Tools MILP optimization.
         
         Args:
-            tasks: List of EnduranceTask objects to schedule
-            resources: List of EnduranceResource objects available
+            tasks: List of Task objects to schedule
+            resources: List of Resource objects available
             
         Returns:
-            EnduranceScheduleResult containing the schedule and metadata
+            ScheduleResult containing the schedule and metadata
         """
         start_time = datetime.now()
         

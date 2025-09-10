@@ -2,6 +2,6 @@
 Testing framework for algorithm comparison and evaluation.
 """
 
-from .endurance_test_framework import EnduranceTestRunner, EnduranceTestCase, EnduranceTestResult, EnduranceTestCaseBuilder
+from .test_framework import TestRunner, TestCase, TestResult, TestCaseBuilder
 
-__all__ = ["EnduranceTestRunner", "EnduranceTestCase", "EnduranceTestResult", "EnduranceTestCaseBuilder"]
+__all__ = ["TestRunner", "TestCase", "TestResult", "TestCaseBuilder"]

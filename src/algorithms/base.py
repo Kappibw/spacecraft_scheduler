@@ -1,5 +1,5 @@
 """
-Base classes for Endurance scheduling algorithms.
+Base classes for scheduling algorithms.
 """
 
 from abc import ABC, abstractmethod
@@ -8,10 +8,10 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from enum import Enum
 
-from ..common.tasks.endurance_task import EnduranceTask
-from ..common.tasks.endurance_task_manager import EnduranceTaskManager
-from ..common.resources.endurance_resource import EnduranceResource
-from ..common.resources.endurance_resource_manager import EnduranceResourceManager
+from ..common.tasks.task import Task
+from ..common.tasks.task_manager import TaskManager
+from ..common.resources.resource import Resource
+from ..common.resources.resource_manager import ResourceManager
 
 
 class ScheduleStatus(Enum):
@@ -23,8 +23,8 @@ class ScheduleStatus(Enum):
 
 
 @dataclass
-class EnduranceScheduledTask:
-    """A task that has been scheduled for the Endurance robot."""
+class ScheduledTask:
+    """A task that has been scheduled for the robot."""
     
     task_id: str
     start_time: datetime
@@ -63,7 +63,7 @@ class EnduranceScheduledTask:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EnduranceScheduledTask":
+    def from_dict(cls, data: Dict[str, Any]) -> "ScheduledTask":
         """Create from dictionary representation."""
         return cls(
             task_id=data["task_id"],
@@ -78,11 +78,11 @@ class EnduranceScheduledTask:
 
 
 @dataclass
-class EnduranceScheduleResult:
-    """Result of a scheduling operation for the Endurance robot."""
+class ScheduleResult:
+    """Result of a scheduling operation for the robot."""
     
     status: ScheduleStatus
-    schedule: List[EnduranceScheduledTask] = field(default_factory=list)
+    schedule: List[ScheduledTask] = field(default_factory=list)
     unscheduled_tasks: List[str] = field(default_factory=list)
     solve_time: float = 0.0
     message: str = ""
@@ -151,7 +151,7 @@ class EnduranceScheduleResult:
         
         return resource_usage
     
-    def get_task_by_id(self, task_id: str) -> Optional[EnduranceScheduledTask]:
+    def get_task_by_id(self, task_id: str) -> Optional[ScheduledTask]:
         """Get a scheduled task by ID."""
         for task in self.schedule:
             if task.task_id == task_id:
@@ -162,7 +162,7 @@ class EnduranceScheduleResult:
         self, 
         start_time: datetime, 
         end_time: datetime
-    ) -> List[EnduranceScheduledTask]:
+    ) -> List[ScheduledTask]:
         """Get all tasks that overlap with the given time window."""
         overlapping_tasks = []
         for task in self.schedule:
@@ -189,11 +189,11 @@ class EnduranceScheduleResult:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "EnduranceScheduleResult":
+    def from_dict(cls, data: Dict[str, Any]) -> "ScheduleResult":
         """Create from dictionary representation."""
         return cls(
             status=ScheduleStatus(data["status"]),
-            schedule=[EnduranceScheduledTask.from_dict(task_data)
+            schedule=[ScheduledTask.from_dict(task_data)
                      for task_data in data.get("schedule", [])],
             unscheduled_tasks=data.get("unscheduled_tasks", []),
             solve_time=data.get("solve_time", 0.0),
@@ -203,18 +203,18 @@ class EnduranceScheduleResult:
 
 
 class BaseScheduler(ABC):
-    """Base class for all Endurance robot scheduling algorithms."""
+    """Base class for all robot scheduling algorithms."""
     
     def __init__(self, name: str, time_limit: float = 300.0):
         self.name = name
         self.time_limit = time_limit
-        self.task_manager: Optional[EnduranceTaskManager] = None
-        self.resource_manager: Optional[EnduranceResourceManager] = None
+        self.task_manager: Optional[TaskManager] = None
+        self.resource_manager: Optional[ResourceManager] = None
     
     def set_managers(
         self,
-        task_manager: EnduranceTaskManager,
-        resource_manager: EnduranceResourceManager
+        task_manager: TaskManager,
+        resource_manager: ResourceManager
     ) -> None:
         """Set the task and resource managers."""
         self.task_manager = task_manager
@@ -223,25 +223,25 @@ class BaseScheduler(ABC):
     @abstractmethod
     def schedule(
         self,
-        tasks: List[EnduranceTask],
-        resources: List[EnduranceResource]
-    ) -> EnduranceScheduleResult:
+        tasks: List[Task],
+        resources: List[Resource]
+    ) -> ScheduleResult:
         """
-        Schedule tasks for the Endurance robot.
+        Schedule tasks for the robot.
         
         Args:
             tasks: List of tasks to schedule
             resources: List of available resources
             
         Returns:
-            EnduranceScheduleResult with the scheduling outcome
+            ScheduleResult with the scheduling outcome
         """
         pass
     
     def validate_inputs(
         self,
-        tasks: List[EnduranceTask],
-        resources: List[EnduranceResource]
+        tasks: List[Task],
+        resources: List[Resource]
     ) -> List[str]:
         """Validate input tasks and resources."""
         errors = []
@@ -292,12 +292,12 @@ class BaseScheduler(ABC):
     def create_schedule_result(
         self,
         status: ScheduleStatus,
-        schedule: List[EnduranceScheduledTask] = None,
+        schedule: List[ScheduledTask] = None,
         unscheduled_tasks: List[str] = None,
         solve_time: float = 0.0,
         message: str = "",
         metadata: Dict[str, Any] = None
-    ) -> EnduranceScheduleResult:
+    ) -> ScheduleResult:
         """Create a schedule result object."""
         if schedule is None:
             schedule = []
@@ -306,7 +306,7 @@ class BaseScheduler(ABC):
         if metadata is None:
             metadata = {}
         
-        return EnduranceScheduleResult(
+        return ScheduleResult(
             status=status,
             schedule=schedule,
             unscheduled_tasks=unscheduled_tasks,
@@ -325,8 +325,8 @@ class BaseScheduler(ABC):
     
     def check_task_constraints(
         self,
-        task: EnduranceTask,
-        scheduled_tasks: List[EnduranceScheduledTask]
+        task: Task,
+        scheduled_tasks: List[ScheduledTask]
     ) -> List[str]:
         """Check if a task's constraints can be satisfied."""
         errors = []
@@ -369,8 +369,8 @@ class BaseScheduler(ABC):
     
     def check_resource_constraints(
         self,
-        task: EnduranceTask,
-        scheduled_tasks: List[EnduranceScheduledTask]
+        task: Task,
+        scheduled_tasks: List[ScheduledTask]
     ) -> List[str]:
         """Check if a task's resource constraints can be satisfied."""
         errors = []

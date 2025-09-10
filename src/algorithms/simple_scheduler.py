@@ -1,16 +1,16 @@
 """
-Simple Endurance scheduler implementation for demonstration.
+Simple scheduler implementation for demonstration.
 """
 
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 
-from .base import BaseScheduler, EnduranceScheduleResult, ScheduleStatus, EnduranceScheduledTask
-from ..common.tasks.endurance_task import EnduranceTask
-from ..common.resources.endurance_resource import EnduranceResource
+from .base import BaseScheduler, ScheduleResult, ScheduleStatus, ScheduledTask
+from ..common.tasks.task import Task
+from ..common.resources.resource import Resource
 
 
-class EnduranceSimpleScheduler(BaseScheduler):
+class SimpleScheduler(BaseScheduler):
     """
     Simple scheduler that schedules tasks in priority order.
     
@@ -20,13 +20,13 @@ class EnduranceSimpleScheduler(BaseScheduler):
     """
     
     def __init__(self, time_limit: float = 300.0):
-        super().__init__("Simple Endurance Scheduler", time_limit)
+        super().__init__("Simple Scheduler", time_limit)
     
     def schedule(
         self,
-        tasks: List[EnduranceTask],
-        resources: List[EnduranceResource]
-    ) -> EnduranceScheduleResult:
+        tasks: List[Task],
+        resources: List[Resource]
+    ) -> ScheduleResult:
         """
         Schedule tasks using a simple priority-based approach.
         
@@ -90,10 +90,10 @@ class EnduranceSimpleScheduler(BaseScheduler):
     
     def _try_schedule_task(
         self,
-        task: EnduranceTask,
+        task: Task,
         current_time: datetime,
         scheduled_tasks: List[Dict[str, Any]],
-        resources: List[EnduranceResource]
+        resources: List[Resource]
     ) -> Dict[str, Any]:
         """Try to schedule a single task."""
         
@@ -130,7 +130,7 @@ class EnduranceSimpleScheduler(BaseScheduler):
             return None  # Resource constraints not satisfied
         
         # Create scheduled task
-        scheduled_task = EnduranceScheduledTask(
+        scheduled_task = ScheduledTask(
             task_id=task.id,
             start_time=start_time,
             end_time=end_time,

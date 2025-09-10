@@ -1,4 +1,4 @@
-# Endurance Scheduler
+# Scheduler
 
 A comprehensive task scheduling system for robotic applications with support for complex constraints, resource management, and multiple scheduling algorithms.
 
@@ -6,17 +6,17 @@ A comprehensive task scheduling system for robotic applications with support for
 
 ### Run the Complete Demo
 ```bash
-python endurance_scheduler_demo.py
+python scheduler_demo.py
 ```
 
 ### Run Algorithm Comparison
 ```bash
-python endurance_scheduler.py
+python scheduler.py
 ```
 
 ### Run Comprehensive Example
 ```bash
-python endurance_scheduler_example.py
+python scheduler_example.py
 ```
 
 ## 📁 Project Structure
@@ -24,10 +24,10 @@ python endurance_scheduler_example.py
 ```
 /app/
 ├── spacecraft_scheduler/                # Main scheduler project
-│   ├── endurance_scheduler_demo.py     # Complete demo and usage guide
-│   ├── endurance_scheduler.py          # Main algorithm comparison script
-│   ├── endurance_scheduler_example.py  # Comprehensive example with testing
-│   ├── ENDURANCE_SCHEDULER_GUIDE.md   # Detailed usage guide
+│   ├── scheduler_demo.py               # Complete demo and usage guide
+│   ├── scheduler.py                    # Main algorithm comparison script
+│   ├── scheduler_example.py            # Comprehensive example with testing
+│   ├── SCHEDULER_GUIDE.md              # Detailed usage guide
 │   ├── requirements/                   # Python dependencies
 │   ├── src/                           # Source code
 │   │   ├── algorithms/                # Scheduling algorithms
@@ -42,18 +42,18 @@ python endurance_scheduler_example.py
 ## 🏗️ Architecture
 
 ### Core Models
-- **`EnduranceTask`**: Tasks with time windows, duration ranges, and constraints
-- **`EnduranceResource`**: Resources (integer or cumulative rate types)
-- **`EnduranceScheduledTask`**: Scheduled tasks with start/end times
-- **`EnduranceScheduleResult`**: Scheduling operation results
+- **`Task`**: Tasks with time windows, duration ranges, and constraints
+- **`Resource`**: Resources (integer or cumulative rate types)
+- **`ScheduledTask`**: Scheduled tasks with start/end times
+- **`ScheduleResult`**: Scheduling operation results
 
 ### Algorithms
-- **`EnduranceSimpleScheduler`**: Priority-based greedy scheduler
-- **`EnduranceMILPScheduler`**: MILP-based scheduler using OR-Tools
+- **`SimpleScheduler`**: Priority-based greedy scheduler
+- **`MILPScheduler`**: MILP-based scheduler using OR-Tools
 
 ### Testing Framework
-- **`EnduranceTestRunner`**: Runs test cases against schedulers
-- **`EnduranceTestCase`**: Represents test scenarios
+- **`TestRunner`**: Runs test cases against schedulers
+- **`TestCase`**: Represents test scenarios
 
 ## 📋 Features
 
@@ -88,4 +88,4 @@ This project is developed in a containerized environment. The git repository is 
 
 ## 📄 License
 
-This project is part of the Endurance robotic scheduling system.
+This project is part of the Scheduler robotic scheduling system.

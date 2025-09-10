@@ -1,30 +1,29 @@
 """
-Resource management functionality for robot scheduling.
+Resource Manager for handling Resource objects.
 """
 
-from typing import List, Dict, Optional, Set, Any
-from datetime import datetime
-from .resource import Resource, ResourceStatus, ResourceType
+from typing import Dict, List, Optional, Any
+from .resource import Resource, ResourceType, ResourceStatus
 
 
 class ResourceManager:
-    """Manages resources for robot scheduling."""
+    """Manages Resource objects and their state."""
     
     def __init__(self):
         self.resources: Dict[str, Resource] = {}
-        self.allocations: Dict[str, Dict[str, float]] = {}  # task_id -> {resource_id: amount}
+        self.resource_usage: Dict[str, Dict[str, float]] = {}  # resource_id -> {task_id: amount}
     
     def add_resource(self, resource: Resource) -> None:
         """Add a resource to the manager."""
         self.resources[resource.id] = resource
+        self.resource_usage[resource.id] = {}
     
     def remove_resource(self, resource_id: str) -> bool:
         """Remove a resource from the manager."""
         if resource_id in self.resources:
-            # Check if resource is currently allocated
-            for task_id, allocations in self.allocations.items():
-                if resource_id in allocations:
-                    return False  # Cannot remove allocated resource
+            # Clear any usage tracking
+            if resource_id in self.resource_usage:
+                del self.resource_usage[resource_id]
             del self.resources[resource_id]
             return True
         return False
@@ -39,125 +38,175 @@ class ResourceManager:
     
     def get_resources_by_type(self, resource_type: ResourceType) -> List[Resource]:
         """Get all resources of a specific type."""
-        return [resource for resource in self.resources.values() 
-                if resource.resource_type == resource_type]
+        return [r for r in self.resources.values() if r.resource_type == resource_type]
+    
+    def get_integer_resources(self) -> List[Resource]:
+        """Get all integer resources."""
+        return self.get_resources_by_type(ResourceType.INTEGER)
+    
+    def get_cumulative_rate_resources(self) -> List[Resource]:
+        """Get all cumulative rate resources."""
+        return self.get_resources_by_type(ResourceType.CUMULATIVE_RATE)
     
     def get_resources_by_status(self, status: ResourceStatus) -> List[Resource]:
         """Get all resources with a specific status."""
-        return [resource for resource in self.resources.values() 
-                if resource.status == status]
+        return [r for r in self.resources.values() if r.status == status]
     
-    def get_available_resources(self, resource_type: Optional[ResourceType] = None) -> List[Resource]:
-        """Get all available resources, optionally filtered by type."""
-        available = [resource for resource in self.resources.values() 
-                    if resource.status == ResourceStatus.AVAILABLE]
-        
-        if resource_type:
-            available = [resource for resource in available 
-                        if resource.resource_type == resource_type]
-        
-        return available
+    def get_available_resources(self) -> List[Resource]:
+        """Get all available resources."""
+        return self.get_resources_by_status(ResourceStatus.AVAILABLE)
     
-    def allocate_resources(self, task_id: str, resource_requirements: Dict[str, float]) -> bool:
-        """Allocate resources for a task."""
-        # Check if all required resources are available
+    def can_allocate_resources(
+        self, 
+        task_id: str, 
+        resource_requirements: Dict[str, float]
+    ) -> bool:
+        """Check if resources can be allocated for a task."""
         for resource_id, amount in resource_requirements.items():
             resource = self.get_resource(resource_id)
-            if not resource or not resource.can_allocate(amount):
-                # Rollback any partial allocations
+            if not resource:
+                return False
+            
+            # Check if resource can allocate the required amount
+            if not resource.can_allocate(amount):
+                return False
+        
+        return True
+    
+    def allocate_resources(
+        self, 
+        task_id: str, 
+        resource_requirements: Dict[str, float]
+    ) -> bool:
+        """Allocate resources for a task."""
+        if not self.can_allocate_resources(task_id, resource_requirements):
+            return False
+        
+        # Allocate each resource
+        for resource_id, amount in resource_requirements.items():
+            resource = self.get_resource(resource_id)
+            if resource.allocate(amount):
+                self.resource_usage[resource_id][task_id] = amount
+            else:
+                # Rollback previous allocations
                 self.deallocate_resources(task_id)
                 return False
         
-        # Allocate resources
-        for resource_id, amount in resource_requirements.items():
-            resource = self.get_resource(resource_id)
-            resource.allocate(amount)
-        
-        # Track allocations
-        self.allocations[task_id] = resource_requirements.copy()
         return True
     
     def deallocate_resources(self, task_id: str) -> bool:
-        """Deallocate resources for a task."""
-        if task_id not in self.allocations:
-            return False
-        
-        # Deallocate resources
-        for resource_id, amount in self.allocations[task_id].items():
+        """Deallocate all resources for a task."""
+        deallocated = True
+        for resource_id, usage in self.resource_usage.items():
+            if task_id in usage:
+                resource = self.get_resource(resource_id)
+                if resource:
+                    amount = usage[task_id]
+                    if not resource.deallocate(amount):
+                        deallocated = False
+                    del usage[task_id]
+        return deallocated
+    
+    def get_task_resource_usage(self, task_id: str) -> Dict[str, float]:
+        """Get resource usage for a specific task."""
+        usage = {}
+        for resource_id, task_usage in self.resource_usage.items():
+            if task_id in task_usage:
+                usage[resource_id] = task_usage[task_id]
+        return usage
+    
+    def get_resource_usage(self, resource_id: str) -> Dict[str, float]:
+        """Get all task usage for a specific resource."""
+        return self.resource_usage.get(resource_id, {})
+    
+    def update_resource_rates(self, rate_changes: Dict[str, float]) -> None:
+        """Update rates for cumulative rate resources."""
+        for resource_id, new_rate in rate_changes.items():
             resource = self.get_resource(resource_id)
-            if resource:
-                resource.deallocate(amount)
-        
-        # Remove allocation tracking
-        del self.allocations[task_id]
-        return True
+            if resource and resource.resource_type == ResourceType.CUMULATIVE_RATE:
+                resource.set_rate(new_rate)
     
-    def get_task_allocations(self, task_id: str) -> Dict[str, float]:
-        """Get resource allocations for a task."""
-        return self.allocations.get(task_id, {})
+    def update_resources_over_time(self, delta_time: float) -> None:
+        """Update all cumulative rate resources over time."""
+        for resource in self.get_cumulative_rate_resources():
+            resource.update_value(delta_time)
     
-    def find_suitable_resources(self, requirements: Dict[str, Any]) -> Dict[str, List[Resource]]:
-        """Find resources that can satisfy the given requirements."""
-        suitable = {}
+    def get_resource_utilization(self, resource_id: str) -> float:
+        """Get utilization percentage for a resource."""
+        resource = self.get_resource(resource_id)
+        if resource:
+            return resource.utilization
+        return 0.0
+    
+    def get_all_resource_utilization(self) -> Dict[str, float]:
+        """Get utilization for all resources."""
+        return {resource_id: self.get_resource_utilization(resource_id) 
+                for resource_id in self.resources.keys()}
+    
+    def validate_resource_constraints(
+        self,
+        task_id: str,
+        resource_constraints: List[Dict[str, Any]]
+    ) -> List[str]:
+        """Validate that resource constraints can be satisfied."""
+        errors = []
         
-        for resource_type_str, amount in requirements.items():
-            try:
-                resource_type = ResourceType(resource_type_str)
-                available_resources = self.get_available_resources(resource_type)
-                
-                # Filter by capacity and capabilities if specified
-                suitable_resources = []
-                for resource in available_resources:
-                    if resource.available_capacity >= amount:
-                        # Check capabilities if specified
-                        if "capabilities" in requirements:
-                            required_capabilities = requirements["capabilities"]
-                            if all(cap in resource.capabilities for cap in required_capabilities):
-                                suitable_resources.append(resource)
-                        else:
-                            suitable_resources.append(resource)
-                
-                suitable[resource_type_str] = suitable_resources
-            except ValueError:
-                # Invalid resource type
+        for constraint in resource_constraints:
+            resource_id = constraint.get("resource_id")
+            min_amount = constraint.get("min_amount", 0.0)
+            max_amount = constraint.get("max_amount", float('inf'))
+            
+            resource = self.get_resource(resource_id)
+            if not resource:
+                errors.append(f"Resource {resource_id} not found")
                 continue
+            
+            # Check if resource can provide the required amount
+            if resource.resource_type == ResourceType.INTEGER:
+                if min_amount > resource.available_capacity:
+                    errors.append(f"Resource {resource_id} cannot provide "
+                                 f"minimum amount {min_amount}")
+                if max_amount > resource.max_capacity:
+                    errors.append(f"Resource {resource_id} max amount "
+                                 f"{max_amount} exceeds capacity")
+            elif resource.resource_type == ResourceType.CUMULATIVE_RATE:
+                # For cumulative resources, we need to check bounds
+                if resource.min_value is not None and min_amount < resource.min_value:
+                    errors.append(f"Resource {resource_id} minimum amount "
+                                 f"below resource minimum")
+                if resource.max_value is not None and max_amount > resource.max_value:
+                    errors.append(f"Resource {resource_id} maximum amount "
+                                 f"exceeds resource maximum")
         
-        return suitable
+        return errors
     
-    def update_resource_status(self, resource_id: str, status: ResourceStatus) -> bool:
-        """Update the status of a resource."""
-        if resource_id in self.resources:
-            self.resources[resource_id].status = status
-            return True
-        return False
-    
-    def get_resource_statistics(self) -> Dict[str, int]:
-        """Get statistics about resources."""
+    def get_resource_statistics(self) -> Dict[str, Any]:
+        """Get statistics about resources in the manager."""
         stats = {
-            "total": len(self.resources),
-            "available": 0,
-            "busy": 0,
-            "maintenance": 0,
-            "offline": 0,
-            "reserved": 0
+            "total_resources": len(self.resources),
+            "integer_resources": len(self.get_integer_resources()),
+            "cumulative_rate_resources": len(self.get_cumulative_rate_resources()),
+            "available_resources": len(self.get_available_resources()),
+            "utilization": self.get_all_resource_utilization()
         }
-        
-        for resource in self.resources.values():
-            stats[resource.status.value] += 1
-        
         return stats
     
-    def get_utilization_report(self) -> Dict[str, Dict[str, float]]:
-        """Get utilization report for all resources."""
-        report = {}
-        
+    def reset_all_resources(self) -> None:
+        """Reset all resources to their initial state."""
         for resource in self.resources.values():
-            report[resource.id] = {
-                "name": resource.name,
-                "type": resource.resource_type.value,
-                "utilization": resource.utilization,
-                "available_capacity": resource.available_capacity,
-                "status": resource.status.value
-            }
+            if resource.resource_type == ResourceType.INTEGER:
+                resource.current_state.current_value = 0.0
+                resource.status = ResourceStatus.AVAILABLE
+            elif resource.resource_type == ResourceType.CUMULATIVE_RATE:
+                resource.current_state.current_value = resource.initial_value or 0.0
+                resource.current_state.rate = 0.0
         
-        return report
+        # Clear usage tracking
+        self.resource_usage.clear()
+        for resource_id in self.resources.keys():
+            self.resource_usage[resource_id] = {}
+    
+    def clear(self) -> None:
+        """Clear all resources from the manager."""
+        self.resources.clear()
+        self.resource_usage.clear()

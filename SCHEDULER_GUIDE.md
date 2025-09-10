@@ -1,30 +1,30 @@
-# Endurance Scheduler - Complete Usage Guide
+# Scheduler Scheduler - Complete Usage Guide
 
-This guide explains how to use the consolidated Endurance scheduler codebase to add tasks, create tests, and iterate on algorithms.
+This guide explains how to use the consolidated Scheduler scheduler codebase to add tasks, create tests, and iterate on algorithms.
 
 ## 🏗️ Consolidated Architecture
 
 The codebase has been consolidated into a clean, unified architecture:
 
 ### Core Models
-- **`EnduranceTask`**: Represents tasks with time windows, duration ranges, and constraints
-- **`EnduranceResource`**: Represents resources (integer or cumulative rate types)
-- **`EnduranceScheduledTask`**: Represents a scheduled task with start/end times
-- **`EnduranceScheduleResult`**: Contains the result of a scheduling operation
+- **`SchedulerTask`**: Represents tasks with time windows, duration ranges, and constraints
+- **`SchedulerResource`**: Represents resources (integer or cumulative rate types)
+- **`SchedulerScheduledTask`**: Represents a scheduled task with start/end times
+- **`SchedulerScheduleResult`**: Contains the result of a scheduling operation
 
 ### Managers
-- **`EnduranceTaskManager`**: Manages tasks and their relationships
-- **`EnduranceResourceManager`**: Manages resources and their state
+- **`SchedulerTaskManager`**: Manages tasks and their relationships
+- **`SchedulerResourceManager`**: Manages resources and their state
 
 ### Algorithms (Consolidated)
 - **`BaseScheduler`**: Single base class for all scheduling algorithms
-- **`EnduranceSimpleScheduler`**: Simple priority-based scheduler
-- **`EnduranceMILPScheduler`**: MILP-based scheduler using OR-Tools
+- **`SchedulerSimpleScheduler`**: Simple priority-based scheduler
+- **`SchedulerMILPScheduler`**: MILP-based scheduler using OR-Tools
 
 ### Testing Framework
-- **`EnduranceTestCase`**: Represents a test case
-- **`EnduranceTestRunner`**: Runs test cases against schedulers
-- **`EnduranceTestCaseBuilder`**: Helper for creating test cases
+- **`SchedulerTestCase`**: Represents a test case
+- **`SchedulerTestRunner`**: Runs test cases against schedulers
+- **`SchedulerTestCaseBuilder`**: Helper for creating test cases
 
 ## 📁 File Structure
 
@@ -81,10 +81,10 @@ This shows a complete example with testing and algorithm iteration.
 
 ```python
 from datetime import datetime, timedelta
-from src.common.tasks.endurance_task import EnduranceTask
+from src.common.tasks.endurance_task import SchedulerTask
 
 # Create a task with time window and duration range
-task = EnduranceTask.create(
+task = SchedulerTask.create(
     name="Pick up object",
     description="Pick up object from location A",
     start_time=datetime.now(),
@@ -150,17 +150,17 @@ task.add_resource_impact(
 ### Integer Resources (Discrete Capacity)
 
 ```python
-from src.common.resources.endurance_resource import EnduranceResource
+from src.common.resources.endurance_resource import SchedulerResource
 
 # Create a gripper that can hold 1 object
-gripper = EnduranceResource.create_integer_resource(
+gripper = SchedulerResource.create_integer_resource(
     name="Gripper",
     description="Robot gripper for picking up objects",
     max_capacity=1.0
 )
 
 # Create storage that can hold 3 objects
-storage = EnduranceResource.create_integer_resource(
+storage = SchedulerResource.create_integer_resource(
     name="Storage Bay",
     description="Storage bay for carrying objects",
     max_capacity=3.0
@@ -171,7 +171,7 @@ storage = EnduranceResource.create_integer_resource(
 
 ```python
 # Create a battery that starts at 100% and drains over time
-battery = EnduranceResource.create_cumulative_rate_resource(
+battery = SchedulerResource.create_cumulative_rate_resource(
     name="Battery",
     description="Robot battery power",
     initial_value=100.0,
@@ -180,7 +180,7 @@ battery = EnduranceResource.create_cumulative_rate_resource(
 )
 
 # Create a fuel tank that can be refilled
-fuel = EnduranceResource.create_cumulative_rate_resource(
+fuel = SchedulerResource.create_cumulative_rate_resource(
     name="Fuel Tank",
     description="Robot fuel tank",
     initial_value=50.0,
@@ -194,9 +194,9 @@ fuel = EnduranceResource.create_cumulative_rate_resource(
 ### Basic Algorithm Structure
 
 ```python
-from src.algorithms.base import BaseScheduler, EnduranceScheduleResult, ScheduleStatus
+from src.algorithms.base import BaseScheduler, SchedulerScheduleResult, ScheduleStatus
 
-class MyEnduranceScheduler(BaseScheduler):
+class MySchedulerScheduler(BaseScheduler):
     def __init__(self, time_limit: float = 300.0):
         super().__init__("My Algorithm", time_limit)
     
@@ -223,7 +223,7 @@ class MyEnduranceScheduler(BaseScheduler):
 
 ```python
 # Create and configure scheduler
-scheduler = MyEnduranceScheduler(time_limit=60)
+scheduler = MySchedulerScheduler(time_limit=60)
 
 # Set managers (optional, for advanced features)
 scheduler.set_managers(task_manager, resource_manager)
@@ -242,19 +242,19 @@ print(f"Unscheduled: {result.total_unscheduled_tasks} tasks")
 ### Using the Test Framework
 
 ```python
-from src.testing.endurance_test_framework import EnduranceTestRunner, EnduranceTestCaseBuilder
+from src.testing.endurance_test_framework import SchedulerTestRunner, SchedulerTestCaseBuilder
 
 # Create test runner
-test_runner = EnduranceTestRunner()
+test_runner = SchedulerTestRunner()
 
 # Add test cases
-test_runner.add_test_case(EnduranceTestCaseBuilder.create_simple_test())
-test_runner.add_test_case(EnduranceTestCaseBuilder.create_dependency_test())
-test_runner.add_test_case(EnduranceTestCaseBuilder.create_resource_constrained_test())
-test_runner.add_test_case(EnduranceTestCaseBuilder.create_stress_test(num_tasks=10))
+test_runner.add_test_case(SchedulerTestCaseBuilder.create_simple_test())
+test_runner.add_test_case(SchedulerTestCaseBuilder.create_dependency_test())
+test_runner.add_test_case(SchedulerTestCaseBuilder.create_resource_constrained_test())
+test_runner.add_test_case(SchedulerTestCaseBuilder.create_stress_test(num_tasks=10))
 
 # Test your algorithm
-scheduler = MyEnduranceScheduler()
+scheduler = MySchedulerScheduler()
 results = test_runner.run_all_tests(scheduler)
 
 # Generate report
@@ -265,10 +265,10 @@ print(report)
 ### Creating Custom Test Cases
 
 ```python
-from src.testing.endurance_test_framework import EnduranceTestCase
+from src.testing.endurance_test_framework import SchedulerTestCase
 
 # Create custom test case
-custom_test = EnduranceTestCase(
+custom_test = SchedulerTestCase(
     name="My Custom Test",
     description="Test case for my specific scenario",
     tasks=my_tasks,
@@ -306,12 +306,12 @@ Begin with a basic algorithm that handles simple cases:
 
 ## 📊 Available Algorithms
 
-### EnduranceSimpleScheduler
+### SchedulerSimpleScheduler
 - **Type**: Priority-based greedy scheduler
 - **Use case**: Simple scenarios, fast execution
 - **Features**: Basic constraint checking, priority ordering
 
-### EnduranceMILPScheduler
+### SchedulerMILPScheduler
 - **Type**: Mixed Integer Linear Programming
 - **Use case**: Complex scenarios, optimal solutions
 - **Features**: OR-Tools integration, constraint optimization
@@ -390,6 +390,6 @@ schedule_data = result.to_dict()
 
 ## 🎉 Conclusion
 
-The consolidated Endurance scheduler provides a clean, unified architecture for robot task scheduling. Use the demo files to understand the system, implement your own algorithms, and test them thoroughly with the provided framework.
+The consolidated Scheduler scheduler provides a clean, unified architecture for robot task scheduling. Use the demo files to understand the system, implement your own algorithms, and test them thoroughly with the provided framework.
 
 For questions or issues, refer to the example files or create test cases to validate your understanding.
