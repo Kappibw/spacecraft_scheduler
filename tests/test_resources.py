@@ -71,8 +71,8 @@ class TestResource:
     def test_cumulative_rate_resource_allocation(self):
         """Test cumulative rate resource allocation and deallocation."""
         resource = Resource.create_cumulative_rate_resource(
-            name="Test Fuel Tank",
-            description="Test fuel tank resource",
+            name="Test Data Storage",
+            description="Test data storage resource",
             initial_value=50.0,
             min_value=0.0,
             max_value=100.0

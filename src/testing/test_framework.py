@@ -176,12 +176,12 @@ class TestCaseBuilder:
             test_case.add_task(task)
         
         # Create basic resources
-        gripper = Resource.create_integer_resource(
-            name="Gripper",
-            description="Robot gripper",
+        hga = Resource.create_integer_resource(
+            name="High Gain Antenna",
+            description="High Gain Antenna, can perform a single downlink task at once.",
             max_capacity=1.0
         )
-        test_case.add_resource(gripper)
+        test_case.add_resource(hga)
         
         battery = Resource.create_cumulative_rate_resource(
             name="Battery",
@@ -231,12 +231,12 @@ class TestCaseBuilder:
             test_case.task_manager.add_task(task)
         
         # Create resources
-        gripper = Resource.create_integer_resource(
-            name="Gripper",
-            description="Robot gripper",
+        hga = Resource.create_integer_resource(
+            name="High Gain Antenna",
+            description="High Gain Antenna, can perform a single downlink task at once.",
             max_capacity=1.0
         )
-        test_case.resource_manager.add_resource(gripper)
+        test_case.resource_manager.add_resource(hga)
         
         test_case.set_expectations(min_success_rate=1.0, max_solve_time=2.0)
         
@@ -256,7 +256,7 @@ class TestCaseBuilder:
         for i in range(3):
             task = Task.create(
                 name=f"Resource Task {i+1}",
-                description=f"Task {i+1} requiring gripper",
+                description=f"Task {i+1} requiring HGA",
                 start_time=base_time + timedelta(minutes=i*10),
                 end_time=base_time + timedelta(hours=1, minutes=i*10),
                 min_duration=timedelta(minutes=5),
@@ -267,7 +267,7 @@ class TestCaseBuilder:
             
             # All tasks require the same resource
             task.add_resource_constraint(
-                resource_id="gripper_001",
+                resource_id="hga_001",
                 min_amount=1.0,
                 max_amount=1.0
             )
@@ -275,15 +275,15 @@ class TestCaseBuilder:
             test_case.task_manager.add_task(task)
         
         # Create the constrained resource
-        gripper = Resource.create_integer_resource(
-            name="Gripper",
-            description="Robot gripper (limited capacity)",
+        hga = Resource.create_integer_resource(
+            name="High Gain Antenna",
+            description="High Gain Antenna, can perform a single downlink task at once.",
             max_capacity=1.0
         )
-        gripper.id = "gripper_001"  # Set specific ID for constraints
-        test_case.resource_manager.add_resource(gripper)
+        hga.id = "hga_001"  # Set specific ID for constraints
+        test_case.resource_manager.add_resource(hga)
         
-        test_case.set_expectations(min_success_rate=0.33, max_solve_time=1.0)  # Only 1/3 can be scheduled
+        test_case.set_expectations(min_success_rate=1.0, max_solve_time=1.0)
         
         return test_case
     
@@ -313,12 +313,12 @@ class TestCaseBuilder:
         
         # Create resources
         for i in range(num_robots):
-            gripper = Resource.create_integer_resource(
-                name=f"Gripper {i+1}",
-                description=f"Robot gripper {i+1}",
+            hga = Resource.create_integer_resource(
+                name=f"High Gain Antenna {i+1}",
+                description=f"High Gain Antenna {i+1}, can perform a single downlink task at once.",
                 max_capacity=1.0
             )
-            test_case.resource_manager.add_resource(gripper)
+            test_case.resource_manager.add_resource(hga)
         
         test_case.set_expectations(min_success_rate=0.5, max_solve_time=5.0)
         

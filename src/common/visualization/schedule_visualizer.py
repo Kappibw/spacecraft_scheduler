@@ -76,11 +76,7 @@ class ScheduleVisualizer:
         # Create figure with subplots and set background color
         # Top plot: Tasks as rectangles
         # Bottom plot: All resources combined as line plots
-        resource_ids = set()
-        for task in result.schedule:
-            resource_ids.update(task.resource_allocations.keys())
-        
-        n_resources = len(resource_ids)
+        n_resources = len(resource_manager.get_all_resources())
         if n_resources == 0:
             # Only task plot if no resources
             fig, axes = plt.subplots(1, 1, figsize=self.figsize, facecolor='white')
@@ -100,7 +96,7 @@ class ScheduleVisualizer:
         # Plot 2: All resources as combined line plots
         if n_resources > 0:
             self._plot_combined_resources(axes[1], result, resource_manager, 
-                                        sorted(resource_ids), min_time, max_time)
+                                          min_time, max_time)
         
         # Final formatting
         axes[0].set_title(title, fontsize=16, fontweight='bold')
@@ -146,8 +142,13 @@ class ScheduleVisualizer:
                     if existing_level == level:
                         # Check for actual overlap (tasks touching at exact times are OK)
                         # Only stack if there's a real overlap (not just touching)
-                        if (task.start_time < existing_task.end_time and 
-                            task.end_time > existing_task.start_time):
+                        # Round to the nearest tenth of a second
+                        task_start_time = round(task.start_time.timestamp(), 1)
+                        task_end_time = round(task.end_time.timestamp(), 1)
+                        existing_task_start_time = round(existing_task.start_time.timestamp(), 1)
+                        existing_task_end_time = round(existing_task.end_time.timestamp(), 1)
+                        if (task_start_time < existing_task_end_time or 
+                            task_end_time > existing_task_start_time):
                             level_available = False
                             break
                 
@@ -164,7 +165,7 @@ class ScheduleVisualizer:
         task_level_map = {task.task_id: level for task, level in task_levels}
         
         # Plot each task
-        for task, level in task_levels:
+        for index, (task, level) in enumerate(task_levels):
             # Get task details
             task_obj = task_manager.get_task(task.task_id)
             task_name = task_obj.name if task_obj else f"Task {task.task_id[:8]}"
@@ -193,7 +194,7 @@ class ScheduleVisualizer:
             # Add task label
             ax.text(
                 start_num + width / 2,
-                level,
+                level - 0.1 * (index % 2),
                 task_name,
                 ha='center',
                 va='center',
@@ -213,7 +214,7 @@ class ScheduleVisualizer:
                 f"{duration_min:.1f}min",
                 ha='center',
                 va='center',
-                fontsize=8,
+                fontsize=10,
                 color='black',
                 fontweight='bold'
             )
@@ -225,7 +226,7 @@ class ScheduleVisualizer:
                 f"P{priority}",
                 ha='center',
                 va='center',
-                fontsize=8,
+                fontsize=10,
                 color='black',
                 fontweight='bold'
             )
@@ -241,7 +242,7 @@ class ScheduleVisualizer:
                 xytext=(start_num, level + 0.4),
                 ha='center',
                 va='bottom',
-                fontsize=8,
+                fontsize=10,
                 color='black',
                 fontweight='bold'
             )
@@ -253,7 +254,7 @@ class ScheduleVisualizer:
                 xytext=(start_num + width, level + 0.4),
                 ha='center',
                 va='bottom',
-                fontsize=8,
+                fontsize=10,
                 color='black',
                 fontweight='bold'
             )
@@ -360,16 +361,15 @@ class ScheduleVisualizer:
                     ax.add_patch(arrow)
     
     def _plot_combined_resources(self, ax, result: ScheduleResult, resource_manager: ResourceManager,
-                                resource_ids: List[str], min_time: datetime, max_time: datetime):
+                                 min_time: datetime, max_time: datetime):
         """Plot all resources as combined line plots on the same chart."""
         
         # Create time series data for each resource
         all_time_points = set()
         resource_data = {}
         
-        for resource_id in resource_ids:
-            resource = resource_manager.get_resource(resource_id)
-            resource_name = resource.name if resource else f"Resource {resource_id[:8]}"
+        for resource in resource_manager.get_all_resources():
+            resource_name = resource.name if resource else f"Resource {resource.id[:8]}"
             
             # Initial state
             initial_usage = resource.current_state.current_value if resource else 0.0
@@ -377,9 +377,9 @@ class ScheduleVisualizer:
             # Track usage changes from tasks
             task_changes = []
             for task in result.schedule:
-                if resource_id in task.resource_allocations:
-                    task_changes.append((task.start_time, task.resource_allocations[resource_id], 'start'))
-                    task_changes.append((task.end_time, task.resource_allocations[resource_id], 'end'))
+                if resource.id in task.resource_allocations:
+                    task_changes.append((task.start_time, task.resource_allocations[resource.id], 'start'))
+                    task_changes.append((task.end_time, task.resource_allocations[resource.id], 'end'))
             
             # Sort by time
             task_changes.sort(key=lambda x: x[0])
@@ -405,7 +405,7 @@ class ScheduleVisualizer:
             usage_points.append(current_usage)
             all_time_points.add(max_time)
             
-            resource_data[resource_id] = {
+            resource_data[resource.id] = {
                 'name': resource_name,
                 'time_points': time_points,
                 'usage_points': usage_points,
@@ -416,13 +416,13 @@ class ScheduleVisualizer:
         sorted_time_points = sorted(all_time_points)
         
         # Plot each resource
-        for resource_id in resource_ids:
-            data = resource_data[resource_id]
-            resource = data['resource']
+        for resource in resource_manager.get_all_resources():
+            data = resource_data[resource.id]
             resource_name = data['name']
+            resource = data['resource']
             
             # Choose color
-            color = self.resource_colors[hash(resource_id) % len(self.resource_colors)]
+            color = self.resource_colors[hash(resource.id) % len(self.resource_colors)]
             
             # For integer resources, create step function
             if resource and resource.resource_type.value == 'integer':
@@ -484,76 +484,6 @@ class ScheduleVisualizer:
         luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255
         return luminance < 0.5
     
-    def plot_schedule(self, schedule: List[Dict[str, Any]], 
-                     robots: List[str] = None,
-                     title: str = "Robot Schedule") -> plt.Figure:
-        """Plot a Gantt chart of the robot schedule (legacy method)."""
-        if not schedule:
-            fig, ax = plt.subplots(figsize=self.figsize)
-            ax.set_title(title)
-            ax.text(0.5, 0.5, 'No schedule data available', 
-                   ha='center', va='center', transform=ax.transAxes)
-            return fig
-        
-        # Convert schedule to DataFrame for easier manipulation
-        df = pd.DataFrame(schedule)
-        
-        # Extract unique robots if not provided
-        if robots is None:
-            robots = sorted(df['robot_id'].unique())
-        
-        # Create figure and axis
-        fig, ax = plt.subplots(figsize=self.figsize)
-        
-        # Plot each task
-        for i, robot in enumerate(robots):
-            robot_tasks = df[df['robot_id'] == robot]
-            
-            for _, task in robot_tasks.iterrows():
-                start_time = pd.to_datetime(task['start_time'])
-                duration = pd.to_timedelta(task['duration'])
-                end_time = start_time + duration
-                
-                # Get color for task type
-                task_type = task.get('task_type', 'unknown')
-                color = self.task_colors[hash(task_type) % len(self.task_colors)]
-                
-                # Create rectangle for task
-                rect = Rectangle(
-                    (mdates.date2num(start_time), i - 0.4),
-                    mdates.date2num(end_time) - mdates.date2num(start_time),
-                    0.8,
-                    facecolor=color,
-                    edgecolor='black',
-                    alpha=0.7
-                )
-                ax.add_patch(rect)
-                
-                # Add task label
-                ax.text(
-                    mdates.date2num(start_time) + (mdates.date2num(end_time) - mdates.date2num(start_time)) / 2,
-                    i,
-                    f"{task.get('task_id', '')[:8]}",
-                    ha='center',
-                    va='center',
-                    fontsize=8
-                )
-        
-        # Formatting
-        ax.set_ylim(-0.5, len(robots) - 0.5)
-        ax.set_yticks(range(len(robots)))
-        ax.set_yticklabels(robots)
-        ax.set_xlabel('Time')
-        ax.set_ylabel('Robot ID')
-        ax.set_title(title)
-        
-        # Format x-axis
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
-        ax.xaxis.set_major_locator(mdates.HourLocator(interval=1))
-        plt.xticks(rotation=45)
-        
-        plt.tight_layout()
-        return fig
     
     def plot_resource_utilization(self, utilization_data: Dict[str, List[Dict[str, Any]]],
                                  title: str = "Resource Utilization") -> plt.Figure:

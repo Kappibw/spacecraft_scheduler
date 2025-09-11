@@ -89,7 +89,7 @@ task.add_task_constraint(
 ```python
 # Task requires specific amount of a resource
 task.add_resource_constraint(
-    resource_id="gripper_001",
+    resource_id="hga_001",
     min_amount=1.0,  # Must use at least 1 unit
     max_amount=1.0   # Can use at most 1 unit
 )
@@ -109,7 +109,7 @@ task.add_resource_impact(
 
 # Task marks resource as in use
 task.add_resource_impact(
-    resource_id="gripper_001",
+    resource_id="hga_001",
     impact_type=ResourceImpactType.SET_IN_USE,
     impact_value=True
 )
@@ -122,17 +122,17 @@ task.add_resource_impact(
 ```python
 from src.common.resources.resource import SchedulerResource
 
-# Create a gripper that can hold 1 object
-gripper = SchedulerResource.create_integer_resource(
-    name="Gripper",
-    description="Robot gripper for picking up objects",
+# Create a High Gain Antenna that can perform a single downlink task at once.
+hga = SchedulerResource.create_integer_resource(
+    name="HGA",
+    description="High Gain Antenna",
     max_capacity=1.0
 )
 
 # Create storage that can hold 3 objects
-storage = SchedulerResource.create_integer_resource(
-    name="Storage Bay",
-    description="Storage bay for carrying objects",
+sample_storage = SchedulerResource.create_integer_resource(
+    name="Sample Storage",
+    description="Storage for carrying samples",
     max_capacity=3.0
 )
 ```
@@ -149,10 +149,10 @@ battery = SchedulerResource.create_cumulative_rate_resource(
     max_value=100.0
 )
 
-# Create a fuel tank that can be refilled
-fuel = SchedulerResource.create_cumulative_rate_resource(
-    name="Fuel Tank",
-    description="Robot fuel tank",
+# Create data storage capacity
+data_storage = SchedulerResource.create_cumulative_rate_resource(
+    name="Data Storage",
+    description="Data storage capacity in MB",
     initial_value=50.0,
     min_value=0.0,
     max_value=100.0

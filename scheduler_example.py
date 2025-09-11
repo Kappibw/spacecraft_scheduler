@@ -35,17 +35,17 @@ def create_warehouse_scenario():
     # Create resources
     print("Creating resources...")
     
-    # Gripper (can hold 1 object at a time)
-    gripper = Resource.create_integer_resource(
-        name="Gripper",
-        description="Robot gripper for picking up objects",
+    # High Gain Antenna (can perform a single communication task)
+    hga = Resource.create_integer_resource(
+        name="High Gain Antenna",
+        description="High gain antenna for communication",
         max_capacity=1.0
     )
     
-    # Storage bay (can hold 2 objects)
+    # Sample Storage (can hold 2 samples)
     storage = Resource.create_integer_resource(
-        name="Storage Bay",
-        description="Storage bay for carrying objects",
+        name="Sample Storage",
+        description="Storage for carrying samples",
         max_capacity=2.0
     )
     
@@ -58,16 +58,16 @@ def create_warehouse_scenario():
         max_value=100.0
     )
     
-    # Fuel tank (starts at 50L, can be refilled)
-    fuel = Resource.create_cumulative_rate_resource(
-        name="Fuel Tank",
-        description="Robot fuel tank",
+    # Data Storage (starts at 50MB)
+    data_storage = Resource.create_cumulative_rate_resource(
+        name="Data Storage",
+        description="Data storage in MB",
         initial_value=50.0,
         min_value=0.0,
         max_value=100.0
     )
     
-    resources = [gripper, storage, battery, fuel]
+    resources = [hga, storage, battery, data_storage]
     print(f"Created {len(resources)} resources")
     
     # Create tasks
@@ -85,9 +85,9 @@ def create_warehouse_scenario():
         priority=1
     )
     
-    # Task 1 requires gripper
+    # Task 1 requires HGA
     task1.add_resource_constraint(
-        resource_id=gripper.id,
+        resource_id=hga.id,
         min_amount=1.0,
         max_amount=1.0
     )
@@ -111,9 +111,9 @@ def create_warehouse_scenario():
         priority=2
     )
     
-    # Task 2 requires gripper
+    # Task 2 requires HGA
     task2.add_resource_constraint(
-        resource_id=gripper.id,
+        resource_id=hga.id,
         min_amount=1.0,
         max_amount=1.0
     )
@@ -137,18 +137,18 @@ def create_warehouse_scenario():
         priority=3
     )
     
-    # Task 3 requires storage bay
+    # Task 3 requires sample storage
     task3.add_resource_constraint(
         resource_id=storage.id,
         min_amount=2.0,  # Need space for both packages
         max_amount=2.0
     )
     
-    # Task 3 impacts fuel (consumes 2L per minute)
+    # Task 3 impacts data storage (consumes 2MB per minute)
     task3.add_resource_impact(
-        resource_id=fuel.id,
+        resource_id=data_storage.id,
         impact_type="rate_change",
-        impact_value=-2.0  # 2L per minute
+        impact_value=-2.0  # 2MB per minute
     )
     
     # Add dependencies: transport must start after both pickups

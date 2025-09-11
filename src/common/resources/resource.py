@@ -40,7 +40,7 @@ class Resource:
     
     Two types:
     1. INTEGER: Discrete resource with max capacity (e.g., tools, storage slots)
-    2. CUMULATIVE_RATE: Continuous resource with rate changes (e.g., battery, fuel)
+    2. CUMULATIVE_RATE: Continuous resource with rate changes (e.g., battery, data storage)
     """
     
     id: str
