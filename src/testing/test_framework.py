@@ -25,19 +25,19 @@ class TestCase:
     def __init__(self, name: str, description: str):
         self.name = name
         self.description = description
-        self.tasks: List[Task] = []
-        self.resources: List[Resource] = []
+        self.task_manager = TaskManager()
+        self.resource_manager = ResourceManager()
         self.expected_min_success_rate: float = 0.0
         self.expected_max_solve_time: float = float('inf')
         self.metadata: Dict[str, Any] = {}
     
     def add_task(self, task: Task) -> None:
         """Add a task to the test case."""
-        self.tasks.append(task)
+        self.task_manager.add_task(task)
     
     def add_resource(self, resource: Resource) -> None:
         """Add a resource to the test case."""
-        self.resources.append(resource)
+        self.resource_manager.add_resource(resource)
     
     def set_expectations(self, min_success_rate: float = 0.0, max_solve_time: float = float('inf')) -> None:
         """Set expectations for this test case."""
@@ -95,20 +95,11 @@ class TestRunner:
         """Run a single test case against a scheduler."""
         start_time = time.time()
         
-        # Set up managers
-        task_manager = TaskManager()
-        resource_manager = ResourceManager()
-        
-        for task in test_case.tasks:
-            task_manager.add_task(task)
-        
-        for resource in test_case.resources:
-            resource_manager.add_resource(resource)
-        
-        scheduler.set_managers(task_manager, resource_manager)
+        # Managers are now set up during TestCase initialization and accessible as attributes
+        scheduler.set_managers(test_case.task_manager, test_case.resource_manager)
         
         # Run the scheduler
-        schedule_result = scheduler.schedule(test_case.tasks, test_case.resources)
+        schedule_result = scheduler.schedule(test_case.task_manager.get_all_tasks(), test_case.resource_manager.get_all_resources())
         
         solve_time = time.time() - start_time
         
@@ -151,7 +142,7 @@ class TestRunner:
             status = "🟢 PASS" if result.passed else "🔴 FAIL"
             report.append(f"{status} {result.test_case.name}")
             report.append(f"   {result.message}")
-            report.append(f"   Scheduled: {result.schedule_result.total_scheduled_tasks}/{len(result.test_case.tasks)}")
+            report.append(f"   Scheduled: {result.schedule_result.total_scheduled_tasks}/{len(result.test_case.task_manager.tasks)}")
             report.append("")
         
         return "\n".join(report)
@@ -237,7 +228,7 @@ class TestCaseBuilder:
                 )
             
             tasks.append(task)
-            test_case.add_task(task)
+            test_case.task_manager.add_task(task)
         
         # Create resources
         gripper = Resource.create_integer_resource(
@@ -245,7 +236,7 @@ class TestCaseBuilder:
             description="Robot gripper",
             max_capacity=1.0
         )
-        test_case.add_resource(gripper)
+        test_case.resource_manager.add_resource(gripper)
         
         test_case.set_expectations(min_success_rate=1.0, max_solve_time=2.0)
         
@@ -281,7 +272,7 @@ class TestCaseBuilder:
                 max_amount=1.0
             )
             
-            test_case.add_task(task)
+            test_case.task_manager.add_task(task)
         
         # Create the constrained resource
         gripper = Resource.create_integer_resource(
@@ -290,7 +281,7 @@ class TestCaseBuilder:
             max_capacity=1.0
         )
         gripper.id = "gripper_001"  # Set specific ID for constraints
-        test_case.add_resource(gripper)
+        test_case.resource_manager.add_resource(gripper)
         
         test_case.set_expectations(min_success_rate=0.33, max_solve_time=1.0)  # Only 1/3 can be scheduled
         
@@ -318,7 +309,7 @@ class TestCaseBuilder:
                 preferred_duration=timedelta(minutes=5),
                 priority=(i % 3) + 1  # Vary priorities
             )
-            test_case.add_task(task)
+            test_case.task_manager.add_task(task)
         
         # Create resources
         for i in range(num_robots):
@@ -327,7 +318,7 @@ class TestCaseBuilder:
                 description=f"Robot gripper {i+1}",
                 max_capacity=1.0
             )
-            test_case.add_resource(gripper)
+            test_case.resource_manager.add_resource(gripper)
         
         test_case.set_expectations(min_success_rate=0.5, max_solve_time=5.0)
         

@@ -21,6 +21,8 @@ from src.algorithms.base import ScheduleResult, ScheduleStatus
 from src.testing.test_framework import (
     TestRunner, TestCaseBuilder
 )
+from src.common.visualization.schedule_printer import schedule_string_from_result
+from src.common.visualization.schedule_visualizer import ScheduleVisualizer
 
 
 def create_warehouse_scenario():
@@ -218,26 +220,23 @@ def run_scheduling_example():
     print(f"Unscheduled tasks: {result.total_unscheduled_tasks}")
     
     if result.schedule:
-        print("\nSchedule:")
-        for i, scheduled_task in enumerate(result.schedule, 1):
-            # Look up task name from task manager
-            task = task_manager.get_task(scheduled_task.task_id)
-            task_name = task.name if task else f"Task {scheduled_task.task_id[:8]}"
-            
-            print(f"  {i}. {task_name}")
-            print(f"     Start: {scheduled_task.start_time.strftime('%H:%M:%S')}")
-            print(f"     End: {scheduled_task.end_time.strftime('%H:%M:%S')}")
-            print(f"     Duration: {scheduled_task.duration.total_seconds()/60:.1f} min")
-            
-            # Format resource allocations with names
-            resource_names = {}
-            for resource_id, amount in scheduled_task.resource_allocations.items():
-                resource = resource_manager.get_resource(resource_id)
-                resource_name = resource.name if resource else f"Resource {resource_id[:8]}"
-                resource_names[resource_name] = amount
-            
-            print(f"     Resources: {resource_names}")
-            print()
+        schedule_string = schedule_string_from_result(result, task_manager, resource_manager)
+        print(schedule_string)
+        
+        # Generate visualization
+        print("\nGenerating schedule visualization...")
+        visualizer = ScheduleVisualizer()
+        fig = visualizer.plot_schedule_result(
+            result, task_manager, resource_manager,
+            title="Warehouse Scenario Schedule"
+        )
+        
+        # Save visualization
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        os.makedirs(f'/app/results/{timestamp}', exist_ok=True)
+        viz_filename = f'/app/results/{timestamp}/warehouse_scenario_schedule.png'
+        visualizer.save_plot(fig, viz_filename)
+        print(f"Schedule visualization saved: {viz_filename}")
     
     if result.unscheduled_tasks:
         print("Unscheduled tasks:")
