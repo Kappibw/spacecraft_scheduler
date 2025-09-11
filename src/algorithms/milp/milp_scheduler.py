@@ -13,10 +13,11 @@ from ...common.resources.resource import Resource
 
 
 class MILPScheduler(BaseScheduler):
-    """MILP scheduler for robot using the new task and resource models."""
+    """MILP scheduler for robot using Gurobi solver."""
     
-    def __init__(self, time_limit: int = 300):
+    def __init__(self, time_limit: int = 300, max_time_horizon: int = 100):
         super().__init__("MILPScheduler", time_limit)
+        self.max_time_horizon = max_time_horizon
     
     def schedule(self, tasks: List[Task], resources: List[Resource]) -> ScheduleResult:
         """
@@ -29,7 +30,7 @@ class MILPScheduler(BaseScheduler):
         Returns:
             ScheduleResult containing the schedule and metadata
         """
-        start_time = datetime.now()
+        start_time = 0
         
         # Validate inputs
         validation_errors = self.validate_inputs(tasks, resources)
@@ -52,7 +53,7 @@ class MILPScheduler(BaseScheduler):
             model.setParam('OutputFlag', 0)  # Suppress Gurobi output
             
             # Create time horizon based on task time windows
-            time_horizon = self._calculate_time_horizon(tasks)
+            time_horizon = min(self._calculate_time_horizon(tasks), self.max_time_horizon)
             
             # Decision variables
             # x[i,t] = 1 if task i starts at time t
@@ -89,8 +90,8 @@ class MILPScheduler(BaseScheduler):
             # Time window constraints
             for i, task in enumerate(tasks):
                 # Start time must be within task's time window
-                start_min = int((task.start_time - datetime.now()).total_seconds() / 60)
-                start_max = int((task.end_time - task.preferred_duration - datetime.now()).total_seconds() / 60)
+                start_min = int((task.start_time).total_seconds() / 60)
+                start_max = int((task.end_time - task.preferred_duration).total_seconds() / 60)
                 
                 # Constraint: y[i] >= start_min
                 if start_min >= 0:
